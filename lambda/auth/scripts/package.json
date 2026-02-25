@@ -1,0 +1,14 @@
+{
+    "name": "auth-scripts",
+    "version": "1.0.0",
+    "description": "Utility scripts for authentication service",
+    "scripts": {
+        "create-user": "node create-test-user.js"
+    },
+    "dependencies": {
+        "@aws-sdk/client-dynamodb": "^3.490.0",
+        "@aws-sdk/lib-dynamodb": "^3.490.0",
+        "bcryptjs": "^2.4.3",
+        "uuid": "^9.0.1"
+    }
+}

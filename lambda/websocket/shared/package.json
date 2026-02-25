@@ -1,0 +1,19 @@
+{
+    "name": "websocket-shared",
+    "version": "1.0.0",
+    "description": "Shared utilities for WebSocket handlers",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@aws-sdk/client-apigatewaymanagementapi": "^3.600.0",
+        "@aws-sdk/client-dynamodb": "^3.600.0",
+        "@aws-sdk/lib-dynamodb": "^3.600.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.12",
+        "typescript": "^5.4.5"
+    }
+}

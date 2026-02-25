@@ -1,0 +1,140 @@
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = "AWS-Claude-RAG-Chatbot"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  }
+}
+
+# Data sources
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_secretsmanager_secret_version" "jwt_secret" {
+  secret_id = "/chatbot/jwt-secret"
+}
+
+# Local variables
+locals {
+  account_id = data.aws_caller_identity.current.account_id
+  region     = data.aws_region.current.name
+  jwt_secret = data.aws_secretsmanager_secret_version.jwt_secret.secret_string
+
+  common_tags = {
+    Project     = "AWS-Claude-RAG-Chatbot"
+    Environment = var.environment
+  }
+}
+
+# Modules
+module "networking" {
+  source = "./modules/networking"
+
+  environment          = var.environment
+  vpc_cidr             = var.vpc_cidr
+  availability_zones   = var.availability_zones
+  private_subnet_cidrs = var.private_subnet_cidrs
+  public_subnet_cidrs  = var.public_subnet_cidrs
+}
+
+module "storage" {
+  source = "./modules/storage"
+
+  environment = var.environment
+  account_id  = local.account_id
+  kms_key_arn = module.security.kms_key_arn
+}
+
+module "database" {
+  source = "./modules/database"
+
+  environment = var.environment
+  kms_key_arn = module.security.kms_key_arn
+}
+
+module "opensearch" {
+  source = "./modules/opensearch"
+
+  environment          = var.environment
+  vpc_id               = module.networking.vpc_id
+  subnet_ids           = module.networking.private_subnet_ids
+  security_group_ids   = [module.security.opensearch_security_group_id]
+  instance_type        = var.opensearch_instance_type
+  instance_count       = var.opensearch_instance_count
+  master_user_password = var.opensearch_master_user_password
+}
+
+module "security" {
+  source = "./modules/security"
+
+  environment = var.environment
+  vpc_id      = module.networking.vpc_id
+  account_id  = local.account_id
+}
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  environment = var.environment
+}
+
+module "auth" {
+  source = "./modules/auth"
+
+  environment         = var.environment
+  sessions_table_name = module.database.sessions_table_name
+  sessions_table_arn  = module.database.sessions_table_arn
+  users_table_name    = module.database.users_table_name
+  users_table_arn     = module.database.users_table_arn
+  jwt_secret          = local.jwt_secret
+}
+
+module "websocket_handlers" {
+  source = "./modules/websocket-handlers"
+
+  environment                 = var.environment
+  connections_table_name      = module.database.connections_table_name
+  connections_table_arn       = module.database.connections_table_arn
+  websocket_api_id            = module.websocket.websocket_api_id
+  websocket_api_execution_arn = module.websocket.websocket_api_execution_arn
+}
+
+module "websocket" {
+  source = "./modules/websocket"
+
+  environment              = var.environment
+  authorizer_function_arn  = module.auth.authorizer_function_arn
+  authorizer_function_name = module.auth.authorizer_function_name
+  connect_handler_arn      = module.websocket_handlers.connect_function_arn
+  connect_handler_name     = module.websocket_handlers.connect_function_name
+  disconnect_handler_arn   = module.websocket_handlers.disconnect_function_arn
+  disconnect_handler_name  = module.websocket_handlers.disconnect_function_name
+  message_handler_arn      = module.websocket_handlers.message_function_arn
+  message_handler_name     = module.websocket_handlers.message_function_name
+}
+
+module "rest_api" {
+  source = "./modules/rest-api"
+
+  environment             = var.environment
+  authorizer_function_arn = module.auth.authorizer_function_arn
+  authorizer_invoke_arn   = module.auth.authorizer_invoke_arn
+  login_function_name     = module.auth.login_function_name
+  login_invoke_arn        = module.auth.login_invoke_arn
+  logout_function_name    = module.auth.logout_function_name
+  logout_invoke_arn       = module.auth.logout_invoke_arn
+}

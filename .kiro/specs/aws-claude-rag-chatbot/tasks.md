@@ -8,7 +8,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 ## Tasks
 
-- [ ] 1. Set up infrastructure foundation with Terraform
+- [x] 1. Set up infrastructure foundation with Terraform
   - Create Terraform project structure with modules for networking, compute, storage, and security
   - Define VPC with private subnets, NAT Gateway, and VPC endpoints for S3, DynamoDB, and Bedrock
   - Configure S3 buckets for documents (uploads/, processed/, failed/) with KMS encryption and versioning
@@ -20,8 +20,8 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
   - _Requirements: 13.1, 13.2, 13.3, 13.4, 4.4, 4.5, 8.5_
 
 
-- [ ] 2. Implement Authentication Service
-  - [ ] 2.1 Create Lambda Authorizer function for API Gateway
+- [x] 2. Implement Authentication Service
+  - [x] 2.1 Create Lambda Authorizer function for API Gateway
     - Implement JWT token validation with 24-hour expiration
     - Query DynamoDB Sessions table to validate session tokens
     - Return IAM policy document for API Gateway authorization
@@ -36,7 +36,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - **Property 2: Session Token Expiration**
     - **Validates: Requirements 1.3, 1.4**
   
-  - [ ] 2.4 Create login endpoint Lambda function
+  - [x] 2.4 Create login endpoint Lambda function
     - Implement POST /auth/login handler
     - Validate credentials against user store (DynamoDB or Cognito)
     - Generate JWT session token with userId, username, roles
@@ -44,26 +44,26 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Return token and expiration timestamp
     - _Requirements: 1.1, 1.2_
   
-  - [ ] 2.5 Create logout endpoint Lambda function
+  - [x] 2.5 Create logout endpoint Lambda function
     - Implement POST /auth/logout handler
     - Revoke session token by deleting from DynamoDB
     - _Requirements: 1.4_
 
 
-- [ ] 3. Implement WebSocket Manager
-  - [ ] 3.1 Create WebSocket API in API Gateway with Terraform
+- [x] 3. Implement WebSocket Manager
+  - [x] 3.1 Create WebSocket API in API Gateway with Terraform
     - Define $connect, $disconnect, and chat_message routes
     - Configure Lambda Authorizer for WebSocket connections
     - Set connection timeout to 10 minutes with keep-alive support
     - _Requirements: 2.3, 2.4, 13.5_
   
-  - [ ] 3.2 Implement WebSocket connection handler Lambda
+  - [x] 3.2 Implement WebSocket connection handler Lambda
     - Handle $connect route: store connectionId → userId mapping in DynamoDB
     - Handle $disconnect route: remove connectionId from DynamoDB
     - Implement connection validation and authentication
     - _Requirements: 2.3_
   
-  - [ ] 3.3 Implement WebSocket message sender utility
+  - [x] 3.3 Implement WebSocket message sender utility
     - Create utility function to send messages via API Gateway @connections API
     - Implement error handling for stale connections (410 Gone)
     - Support message types: chat_response, typing_indicator, error, system

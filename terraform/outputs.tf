@@ -1,0 +1,99 @@
+output "vpc_id" {
+  description = "VPC ID"
+  value       = module.networking.vpc_id
+}
+
+output "private_subnet_ids" {
+  description = "Private subnet IDs"
+  value       = module.networking.private_subnet_ids
+}
+
+output "public_subnet_ids" {
+  description = "Public subnet IDs"
+  value       = module.networking.public_subnet_ids
+}
+
+output "s3_documents_bucket_name" {
+  description = "S3 bucket name for documents"
+  value       = module.storage.documents_bucket_name
+}
+
+output "s3_documents_bucket_arn" {
+  description = "S3 bucket ARN for documents"
+  value       = module.storage.documents_bucket_arn
+}
+
+output "dynamodb_sessions_table_name" {
+  description = "DynamoDB Sessions table name"
+  value       = module.database.sessions_table_name
+}
+
+output "dynamodb_chat_history_table_name" {
+  description = "DynamoDB ChatHistory table name"
+  value       = module.database.chat_history_table_name
+}
+
+output "dynamodb_rate_limits_table_name" {
+  description = "DynamoDB RateLimits table name"
+  value       = module.database.rate_limits_table_name
+}
+
+output "dynamodb_document_metadata_table_name" {
+  description = "DynamoDB DocumentMetadata table name"
+  value       = module.database.document_metadata_table_name
+}
+
+output "opensearch_endpoint" {
+  description = "OpenSearch cluster endpoint"
+  value       = module.opensearch.endpoint
+}
+
+output "opensearch_domain_arn" {
+  description = "OpenSearch domain ARN"
+  value       = module.opensearch.domain_arn
+}
+
+output "kms_key_arn" {
+  description = "KMS key ARN for encryption"
+  value       = module.security.kms_key_arn
+}
+
+output "lambda_execution_role_arn" {
+  description = "Lambda execution role ARN"
+  value       = module.security.lambda_execution_role_arn
+}
+
+output "cloudwatch_log_group_names" {
+  description = "CloudWatch log group names"
+  value       = module.monitoring.log_group_names
+}
+
+output "websocket_api_endpoint" {
+  description = "WebSocket API endpoint URL"
+  value       = module.websocket.websocket_api_endpoint
+}
+
+output "websocket_stage_url" {
+  description = "WebSocket stage URL"
+  value       = module.websocket.websocket_stage_url
+}
+
+output "dynamodb_connections_table_name" {
+  description = "DynamoDB WebSocket Connections table name"
+  value       = module.database.connections_table_name
+}
+
+output "rest_api_id" {
+  description = "REST API Gateway ID"
+  value       = module.rest_api.rest_api_id
+}
+
+output "rest_api_url" {
+  description = "REST API Gateway URL"
+  value       = module.rest_api.stage_url
+}
+
+output "rest_api_stage_name" {
+  description = "REST API Gateway stage name"
+  value       = module.rest_api.stage_name
+}
