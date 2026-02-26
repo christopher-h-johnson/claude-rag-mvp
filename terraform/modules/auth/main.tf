@@ -1,8 +1,29 @@
 # Authentication Service Lambda Functions
 
 locals {
-  lambda_runtime = "nodejs20.x"
+  lambda_runtime = "nodejs22.x"
   lambda_timeout = 30
+}
+
+# Archive Lambda Authorizer
+data "archive_file" "authorizer" {
+  type        = "zip"
+  source_dir  = "${path.module}/../../../lambda/auth/authorizer/dist"
+  output_path = "${path.module}/../../../lambda/auth/authorizer/dist/index.zip"
+}
+
+# Archive Login Lambda
+data "archive_file" "login" {
+  type        = "zip"
+  source_dir  = "${path.module}/../../../lambda/auth/login/dist"
+  output_path = "${path.module}/../../../lambda/auth/login/dist/index.zip"
+}
+
+# Archive Logout Lambda
+data "archive_file" "logout" {
+  type        = "zip"
+  source_dir  = "${path.module}/../../../lambda/auth/logout/dist"
+  output_path = "${path.module}/../../../lambda/auth/logout/dist/index.zip"
 }
 
 # IAM Role for Lambda Authorizer
@@ -57,13 +78,14 @@ resource "aws_iam_role_policy" "authorizer_policy" {
 
 # Lambda Authorizer Function
 resource "aws_lambda_function" "authorizer" {
-  filename      = "${path.module}/../../../lambda/auth/authorizer/dist/index.zip"
-  function_name = "${var.environment}-api-authorizer"
-  role          = aws_iam_role.authorizer_role.arn
-  handler       = "index.handler"
-  runtime       = local.lambda_runtime
-  timeout       = local.lambda_timeout
-  memory_size   = 256
+  filename         = data.archive_file.authorizer.output_path
+  source_code_hash = data.archive_file.authorizer.output_base64sha256
+  function_name    = "${var.environment}-api-authorizer"
+  role             = aws_iam_role.authorizer_role.arn
+  handler          = "index.handler"
+  runtime          = local.lambda_runtime
+  timeout          = local.lambda_timeout
+  memory_size      = 256
 
   environment {
     variables = {
@@ -136,6 +158,13 @@ resource "aws_iam_role_policy" "login_policy" {
           var.sessions_table_arn,
           var.users_table_arn
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = var.kms_key_arn
       }
     ]
   })
@@ -143,13 +172,14 @@ resource "aws_iam_role_policy" "login_policy" {
 
 # Login Lambda Function
 resource "aws_lambda_function" "login" {
-  filename      = "${path.module}/../../../lambda/auth/login/dist/index.zip"
-  function_name = "${var.environment}-auth-login"
-  role          = aws_iam_role.login_role.arn
-  handler       = "index.handler"
-  runtime       = local.lambda_runtime
-  timeout       = local.lambda_timeout
-  memory_size   = 512
+  filename         = data.archive_file.login.output_path
+  source_code_hash = data.archive_file.login.output_base64sha256
+  function_name    = "${var.environment}-auth-login"
+  role             = aws_iam_role.login_role.arn
+  handler          = "index.handler"
+  runtime          = local.lambda_runtime
+  timeout          = local.lambda_timeout
+  memory_size      = 512
 
   environment {
     variables = {
@@ -226,13 +256,14 @@ resource "aws_iam_role_policy" "logout_policy" {
 
 # Logout Lambda Function
 resource "aws_lambda_function" "logout" {
-  filename      = "${path.module}/../../../lambda/auth/logout/dist/index.zip"
-  function_name = "${var.environment}-auth-logout"
-  role          = aws_iam_role.logout_role.arn
-  handler       = "index.handler"
-  runtime       = local.lambda_runtime
-  timeout       = local.lambda_timeout
-  memory_size   = 256
+  filename         = data.archive_file.logout.output_path
+  source_code_hash = data.archive_file.logout.output_base64sha256
+  function_name    = "${var.environment}-auth-logout"
+  role             = aws_iam_role.logout_role.arn
+  handler          = "index.handler"
+  runtime          = local.lambda_runtime
+  timeout          = local.lambda_timeout
+  memory_size      = 256
 
   environment {
     variables = {

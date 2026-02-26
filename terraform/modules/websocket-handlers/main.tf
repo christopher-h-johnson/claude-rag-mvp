@@ -1,6 +1,27 @@
 locals {
-  lambda_runtime = "nodejs20.x"
+  lambda_runtime = "nodejs22.x"
   lambda_timeout = 30
+}
+
+# Archive WebSocket Connect Handler
+data "archive_file" "connect" {
+  type        = "zip"
+  source_dir  = "${path.module}/../../../lambda/websocket/connect/dist"
+  output_path = "${path.module}/../../../lambda/websocket/connect/dist/index.zip"
+}
+
+# Archive WebSocket Disconnect Handler
+data "archive_file" "disconnect" {
+  type        = "zip"
+  source_dir  = "${path.module}/../../../lambda/websocket/disconnect/dist"
+  output_path = "${path.module}/../../../lambda/websocket/disconnect/dist/index.zip"
+}
+
+# Archive WebSocket Message Handler
+data "archive_file" "message" {
+  type        = "zip"
+  source_dir  = "${path.module}/../../../lambda/websocket/message/dist"
+  output_path = "${path.module}/../../../lambda/websocket/message/dist/index.zip"
 }
 
 # IAM Role for WebSocket Connect Handler
@@ -54,13 +75,14 @@ resource "aws_iam_role_policy" "connect_policy" {
 
 # WebSocket Connect Lambda
 resource "aws_lambda_function" "connect" {
-  filename      = "${path.module}/../../../lambda/websocket/connect/dist/index.zip"
-  function_name = "${var.environment}-websocket-connect"
-  role          = aws_iam_role.connect_role.arn
-  handler       = "index.handler"
-  runtime       = local.lambda_runtime
-  timeout       = local.lambda_timeout
-  memory_size   = 256
+  filename         = data.archive_file.connect.output_path
+  source_code_hash = data.archive_file.connect.output_base64sha256
+  function_name    = "${var.environment}-websocket-connect"
+  role             = aws_iam_role.connect_role.arn
+  handler          = "index.handler"
+  runtime          = local.lambda_runtime
+  timeout          = local.lambda_timeout
+  memory_size      = 256
 
   environment {
     variables = {
@@ -133,13 +155,14 @@ resource "aws_iam_role_policy" "disconnect_policy" {
 
 # WebSocket Disconnect Lambda
 resource "aws_lambda_function" "disconnect" {
-  filename      = "${path.module}/../../../lambda/websocket/disconnect/dist/index.zip"
-  function_name = "${var.environment}-websocket-disconnect"
-  role          = aws_iam_role.disconnect_role.arn
-  handler       = "index.handler"
-  runtime       = local.lambda_runtime
-  timeout       = local.lambda_timeout
-  memory_size   = 256
+  filename         = data.archive_file.disconnect.output_path
+  source_code_hash = data.archive_file.disconnect.output_base64sha256
+  function_name    = "${var.environment}-websocket-disconnect"
+  role             = aws_iam_role.disconnect_role.arn
+  handler          = "index.handler"
+  runtime          = local.lambda_runtime
+  timeout          = local.lambda_timeout
+  memory_size      = 256
 
   environment {
     variables = {
@@ -220,13 +243,14 @@ resource "aws_iam_role_policy" "message_policy" {
 
 # WebSocket Message Lambda (placeholder)
 resource "aws_lambda_function" "message" {
-  filename      = "${path.module}/../../../lambda/websocket/message/dist/index.zip"
-  function_name = "${var.environment}-websocket-message"
-  role          = aws_iam_role.message_role.arn
-  handler       = "index.handler"
-  runtime       = local.lambda_runtime
-  timeout       = local.lambda_timeout
-  memory_size   = 512
+  filename         = data.archive_file.message.output_path
+  source_code_hash = data.archive_file.message.output_base64sha256
+  function_name    = "${var.environment}-websocket-message"
+  role             = aws_iam_role.message_role.arn
+  handler          = "index.handler"
+  runtime          = local.lambda_runtime
+  timeout          = local.lambda_timeout
+  memory_size      = 512
 
   environment {
     variables = {

@@ -42,7 +42,7 @@ resource "aws_cloudwatch_log_group" "websocket_logs" {
 resource "aws_apigatewayv2_authorizer" "websocket" {
   api_id           = aws_apigatewayv2_api.websocket.id
   authorizer_type  = "REQUEST"
-  authorizer_uri   = var.authorizer_function_arn
+  authorizer_uri   = var.authorizer_invoke_arn
   identity_sources = ["route.request.querystring.token"]
   name             = "${var.environment}-websocket-authorizer"
 }

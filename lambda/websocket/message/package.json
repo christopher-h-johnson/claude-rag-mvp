@@ -2,10 +2,10 @@
     "name": "websocket-message",
     "version": "1.0.0",
     "description": "WebSocket message handler Lambda",
-    "main": "dist/index.js",
+    "main": "dist/index.mjs",
     "scripts": {
-        "build": "tsc && cd dist && zip -r ../index.zip .",
-        "clean": "rm -rf dist index.zip"
+        "build": "tsc",
+        "clean": "rm -rf dist"
     },
     "dependencies": {
         "@aws-sdk/client-dynamodb": "^3.600.0",
@@ -16,5 +16,6 @@
         "@types/aws-lambda": "^8.10.138",
         "@types/node": "^20.12.12",
         "typescript": "^5.4.5"
-    }
+    },
+    "type": "module"
 }

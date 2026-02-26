@@ -101,6 +101,7 @@ module "auth" {
   users_table_name    = module.database.users_table_name
   users_table_arn     = module.database.users_table_arn
   jwt_secret          = local.jwt_secret
+  kms_key_arn         = module.security.kms_key_arn
 }
 
 module "websocket_handlers" {
@@ -118,6 +119,7 @@ module "websocket" {
 
   environment              = var.environment
   authorizer_function_arn  = module.auth.authorizer_function_arn
+  authorizer_invoke_arn    = module.auth.authorizer_invoke_arn
   authorizer_function_name = module.auth.authorizer_function_name
   connect_handler_arn      = module.websocket_handlers.connect_function_arn
   connect_handler_name     = module.websocket_handlers.connect_function_name

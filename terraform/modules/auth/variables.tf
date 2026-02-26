@@ -28,3 +28,8 @@ variable "jwt_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "kms_key_arn" {
+  description = "ARN of the KMS key for encryption/decryption"
+  type        = string
+}

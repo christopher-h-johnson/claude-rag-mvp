@@ -123,7 +123,7 @@ Replace:
 
 ```bash
 # Get the API Gateway URL from Terraform outputs
-API_URL=$(terraform output -raw api_gateway_url)
+API_URL=$(terraform output -raw rest_api_url)
 
 # Test login
 curl -X POST "${API_URL}/auth/login" \

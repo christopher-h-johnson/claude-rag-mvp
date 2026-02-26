@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build script for Lambda functions
-# This script builds all Lambda functions and creates deployment packages
+# This script builds all Lambda functions and prepares them for deployment
 
 set -e
 
@@ -15,30 +15,63 @@ build_lambda() {
     echo "Building $lambda_name..."
     cd "$lambda_dir"
     
-    # Install dependencies
+    # Clean dist directory
+    rm -rf dist
+    mkdir -p dist
+    
+    # Install ALL dependencies (including dev dependencies for TypeScript compilation)
     npm install
     
-    # Build TypeScript
+    # Build TypeScript (this will output to dist/)
     npm run build
     
-    # Create deployment package
-    cd dist
-    zip -r index.zip .
-        
+    # Rename .js files to .mjs for ES modules
+    echo "Renaming .js files to .mjs..."
+    find dist -name "*.js" -type f -exec sh -c 'mv "$1" "${1%.js}.mjs"' _ {} \;
+    
+    # Remove existing node_modules and reinstall only production dependencies
+    rm -rf node_modules
+    npm install --production
+    
+    # Copy production node_modules to dist for Lambda deployment
+    echo "Copying production node_modules to dist..."
+    cp -r node_modules dist/
+    
     echo "✓ $lambda_name built successfully"
-    cd ../../..
-    pwd
+    cd ../..
 }
 
+echo "=== Building Auth Lambda functions ==="
 # Build all auth Lambda functions
 build_lambda "auth/authorizer" "Lambda Authorizer"
 build_lambda "auth/login" "Login Lambda"
 build_lambda "auth/logout" "Logout Lambda"
 
 echo ""
+echo "=== Building WebSocket Lambda functions ==="
+# Build WebSocket shared utilities first
+echo "Building WebSocket shared utilities..."
+cd websocket/shared
+npm install
+npm run build
+# Rename .js to .mjs
+find dist -name "*.js" -type f -exec sh -c 'mv "$1" "${1%.js}.mjs"' _ {} \;
+cd ../..
+
+# Build WebSocket handlers
+build_lambda "websocket/connect" "WebSocket Connect Handler"
+build_lambda "websocket/disconnect" "WebSocket Disconnect Handler"
+build_lambda "websocket/message" "WebSocket Message Handler"
+
+echo ""
 echo "All Lambda functions built successfully!"
 echo ""
-echo "Deployment packages created:"
-echo "  - lambda/auth/authorizer/dist/index.zip"
-echo "  - lambda/auth/login/dist/index.zip"
-echo "  - lambda/auth/logout/dist/index.zip"
+echo "Ready for Terraform deployment. Terraform will automatically package:"
+echo "  Auth Functions:"
+echo "    - lambda/auth/authorizer/dist/"
+echo "    - lambda/auth/login/dist/"
+echo "    - lambda/auth/logout/dist/"
+echo "  WebSocket Functions:"
+echo "    - lambda/websocket/connect/dist/"
+echo "    - lambda/websocket/disconnect/dist/"
+echo "    - lambda/websocket/message/dist/"

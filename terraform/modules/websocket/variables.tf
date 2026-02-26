@@ -8,6 +8,11 @@ variable "authorizer_function_arn" {
   type        = string
 }
 
+variable "authorizer_invoke_arn" {
+  description = "Invoke ARN of the Lambda Authorizer function"
+  type        = string
+}
+
 variable "authorizer_function_name" {
   description = "Name of the Lambda Authorizer function"
   type        = string

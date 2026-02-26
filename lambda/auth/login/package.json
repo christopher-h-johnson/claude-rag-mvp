@@ -2,14 +2,14 @@
     "name": "lambda-login",
     "version": "1.0.0",
     "description": "Login endpoint Lambda function",
-    "main": "index.js",
+    "main": "index.mjs",
     "scripts": {
         "build": "tsc",
         "test": "jest"
     },
     "dependencies": {
         "jsonwebtoken": "^9.0.2",
-        "bcryptjs": "^2.4.3",
+        "bcryptjs": "^3.0.3",
         "uuid": "^13.0.0",
         "@aws-sdk/client-dynamodb": "^3.490.0",
         "@aws-sdk/lib-dynamodb": "^3.490.0"
@@ -17,8 +17,8 @@
     "devDependencies": {
         "@types/aws-lambda": "^8.10.131",
         "@types/jsonwebtoken": "^9.0.5",
-        "@types/bcryptjs": "^2.4.6",
         "@types/node": "^20.10.6",
         "typescript": "^5.3.3"
-    }
+    },
+    "type": "module"
 }

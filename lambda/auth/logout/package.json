@@ -2,7 +2,7 @@
     "name": "lambda-logout",
     "version": "1.0.0",
     "description": "Logout endpoint Lambda function",
-    "main": "index.js",
+    "main": "index.mjs",
     "scripts": {
         "build": "tsc",
         "test": "jest"
@@ -15,5 +15,6 @@
         "@types/aws-lambda": "^8.10.131",
         "@types/node": "^20.10.6",
         "typescript": "^5.3.3"
-    }
+    },
+    "type": "module"
 }
