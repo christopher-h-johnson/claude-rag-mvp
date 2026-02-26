@@ -28,11 +28,11 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Cache authorization decisions in Lambda memory for 5 minutes
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
   
-  - [ ]* 2.2 Write property test for Authentication Service
+  - [x] 2.2 Write property test for Authentication Service
     - **Property 1: Invalid Credentials Rejection**
     - **Validates: Requirements 1.2**
   
-  - [ ]* 2.3 Write property test for session expiration
+  - [x] 2.3 Write property test for session expiration
     - **Property 2: Session Token Expiration**
     - **Validates: Requirements 1.3, 1.4**
   
