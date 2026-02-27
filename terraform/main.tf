@@ -112,6 +112,7 @@ module "websocket_handlers" {
   connections_table_arn       = module.database.connections_table_arn
   websocket_api_id            = module.websocket.websocket_api_id
   websocket_api_execution_arn = module.websocket.websocket_api_execution_arn
+  kms_key_arn                 = module.security.kms_key_arn
 }
 
 module "websocket" {

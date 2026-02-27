@@ -68,6 +68,13 @@ resource "aws_iam_role_policy" "connect_policy" {
           "dynamodb:PutItem"
         ]
         Resource = var.connections_table_arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = var.kms_key_arn
       }
     ]
   })
