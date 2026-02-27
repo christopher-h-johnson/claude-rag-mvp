@@ -4,6 +4,7 @@ import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dyn
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+import { logUserAction } from '../../../shared/audit-logger/src/audit-logger.js';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -74,6 +75,22 @@ export const handler = async (
 
         if (!user) {
             console.log('User not found', { username: request.username });
+
+            // Log failed login attempt (user not found)
+            await logUserAction({
+                eventType: 'login',
+                userId: 'unknown',
+                sessionId: 'failed',
+                timestamp: Date.now(),
+                ipAddress: event.requestContext?.identity?.sourceIp || 'unknown',
+                userAgent: event.requestContext?.identity?.userAgent || 'unknown',
+                metadata: {
+                    success: false,
+                    reason: 'user_not_found',
+                    username: request.username,
+                },
+            });
+
             return createResponse(401, { error: 'Invalid credentials' });
         }
 
@@ -82,6 +99,22 @@ export const handler = async (
 
         if (!passwordValid) {
             console.log('Invalid password', { username: request.username });
+
+            // Log failed login attempt
+            await logUserAction({
+                eventType: 'login',
+                userId: user.userId,
+                sessionId: 'failed',
+                timestamp: Date.now(),
+                ipAddress: event.requestContext?.identity?.sourceIp || 'unknown',
+                userAgent: event.requestContext?.identity?.userAgent || 'unknown',
+                metadata: {
+                    success: false,
+                    reason: 'invalid_password',
+                    username: request.username,
+                },
+            });
+
             return createResponse(401, { error: 'Invalid credentials' });
         }
 
@@ -134,6 +167,21 @@ export const handler = async (
         };
 
         console.log('Login successful', { userId: user.userId, sessionId });
+
+        // Log successful login
+        await logUserAction({
+            eventType: 'login',
+            userId: user.userId,
+            sessionId,
+            timestamp: now,
+            ipAddress,
+            userAgent: event.requestContext?.identity?.userAgent || 'unknown',
+            metadata: {
+                success: true,
+                username: user.username,
+                roles: user.roles,
+            },
+        });
 
         return createResponse(200, response);
     } catch (error) {

@@ -6,19 +6,20 @@
             "ESNext"
         ],
         "outDir": "./dist",
+        "rootDir": "./src",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
-        "moduleResolution": "bundler"
+        "moduleResolution": "bundler",
+        "declaration": true
     },
     "include": [
-        "src/index.ts"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules",
-        "dist",
-        "**/*.test.ts"
+        "dist"
     ]
 }

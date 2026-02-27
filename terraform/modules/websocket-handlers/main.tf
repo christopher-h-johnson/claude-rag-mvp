@@ -58,7 +58,8 @@ resource "aws_iam_role_policy" "connect_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
         ]
         Resource = "arn:aws:logs:*:*:*"
       },
@@ -145,16 +146,25 @@ resource "aws_iam_role_policy" "disconnect_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
         ]
         Resource = "arn:aws:logs:*:*:*"
       },
       {
         Effect = "Allow"
         Action = [
-          "dynamodb:DeleteItem"
+          "dynamodb:DeleteItem",
+          "dynamodb:GetItem"
         ]
         Resource = var.connections_table_arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = var.kms_key_arn
       }
     ]
   })
@@ -225,7 +235,8 @@ resource "aws_iam_role_policy" "message_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
         ]
         Resource = "arn:aws:logs:*:*:*"
       },
@@ -243,6 +254,13 @@ resource "aws_iam_role_policy" "message_policy" {
           "execute-api:ManageConnections"
         ]
         Resource = "${var.websocket_api_execution_arn}/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = var.kms_key_arn
       }
     ]
   })

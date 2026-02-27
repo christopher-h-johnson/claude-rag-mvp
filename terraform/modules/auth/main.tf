@@ -61,7 +61,8 @@ resource "aws_iam_role_policy" "authorizer_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
         ]
         Resource = "arn:aws:logs:*:*:*"
       },
@@ -151,7 +152,8 @@ resource "aws_iam_role_policy" "login_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
         ]
         Resource = "arn:aws:logs:*:*:*"
       },
@@ -246,7 +248,8 @@ resource "aws_iam_role_policy" "logout_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
         ]
         Resource = "arn:aws:logs:*:*:*"
       },
@@ -256,6 +259,13 @@ resource "aws_iam_role_policy" "logout_policy" {
           "dynamodb:DeleteItem"
         ]
         Resource = var.sessions_table_arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = "*"
       }
     ]
   })

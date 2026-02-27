@@ -75,14 +75,45 @@ resource "aws_cloudwatch_log_group" "lambda_upload_handler" {
   }
 }
 
-# CloudWatch Log Group for Audit Logs
-resource "aws_cloudwatch_log_group" "audit_logs" {
-  name              = "/aws/chatbot/${var.environment}/audit"
+# CloudWatch Log Groups for Audit Logging
+# Validates: Requirements 11.1, 11.2, 11.3, 11.4, 11.5
+
+# Audit Log Group - User Actions
+resource "aws_cloudwatch_log_group" "audit_user_actions" {
+  name              = "/aws/lambda/chatbot/audit/user-actions"
   retention_in_days = 365
 
   tags = {
-    Name        = "${var.environment}-chatbot-audit-logs"
+    Name        = "${var.environment}-chatbot-audit-user-actions"
     Environment = var.environment
+    LogType     = "audit"
+    Category    = "user-actions"
+  }
+}
+
+# Audit Log Group - API Calls
+resource "aws_cloudwatch_log_group" "audit_api_calls" {
+  name              = "/aws/lambda/chatbot/audit/api-calls"
+  retention_in_days = 365
+
+  tags = {
+    Name        = "${var.environment}-chatbot-audit-api-calls"
+    Environment = var.environment
+    LogType     = "audit"
+    Category    = "api-calls"
+  }
+}
+
+# Audit Log Group - Document Operations
+resource "aws_cloudwatch_log_group" "audit_document_operations" {
+  name              = "/aws/lambda/chatbot/audit/document-operations"
+  retention_in_days = 365
+
+  tags = {
+    Name        = "${var.environment}-chatbot-audit-document-operations"
+    Environment = var.environment
+    LogType     = "audit"
+    Category    = "document-operations"
   }
 }
 
