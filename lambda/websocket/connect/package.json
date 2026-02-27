@@ -4,7 +4,7 @@
     "description": "WebSocket connection handler Lambda",
     "main": "dist/index.mjs",
     "scripts": {
-        "build": "tsc",
+        "build": "powershell -Command \"Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue\" & tsc & powershell -ExecutionPolicy Bypass -File ../../shared/fix-imports.ps1 -Path \"dist/shared/audit-logger/src\" & powershell -Command \"Move-Item dist/websocket/connect/src/index.js dist/index.mjs -Force; (Get-Content dist/index.mjs) -replace '../../../shared/audit-logger/src/audit-logger.js', './shared/audit-logger/src/audit-logger.mjs' | Set-Content dist/index.mjs\"",
         "clean": "rm -rf dist",
         "test": "jest"
     },
@@ -13,14 +13,14 @@
         "@aws-sdk/lib-dynamodb": "^3.600.0"
     },
     "devDependencies": {
-        "@types/aws-lambda": "^8.10.138",
-        "@types/node": "^20.12.12",
-        "typescript": "^5.4.5",
+        "@types/aws-lambda": "^8.10.161",
         "@types/jest": "^29.5.12",
+        "@types/node": "^20.19.35",
+        "aws-sdk-client-mock": "^4.0.0",
+        "fast-check": "^3.15.0",
         "jest": "^29.7.0",
         "ts-jest": "^29.1.2",
-        "fast-check": "^3.15.0",
-        "aws-sdk-client-mock": "^4.0.0"
+        "typescript": "^5.4.5"
     },
     "type": "module"
 }

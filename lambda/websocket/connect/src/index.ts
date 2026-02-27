@@ -1,7 +1,7 @@
 import { APIGatewayProxyWebsocketEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { logUserAction } from '../../../shared/audit-logger/dist/audit-logger.js';
+import { logUserAction } from '../../../shared/audit-logger/src/audit-logger.js';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
