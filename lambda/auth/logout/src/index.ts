@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { logUserAction } from '../../../shared/audit-logger/dist/audit-logger.js';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -20,6 +21,7 @@ export const handler = async (
     try {
         // Get session ID from authorizer context
         const sessionId = event.requestContext?.authorizer?.sessionId;
+        const userId = event.requestContext?.authorizer?.userId;
 
         if (!sessionId) {
             return createResponse(400, { error: 'Session ID not found in request context' });
@@ -37,6 +39,19 @@ export const handler = async (
         );
 
         console.log('Logout successful', { sessionId });
+
+        // Log logout action
+        await logUserAction({
+            eventType: 'logout',
+            userId: userId || 'unknown',
+            sessionId,
+            timestamp: Date.now(),
+            ipAddress: event.requestContext?.identity?.sourceIp || 'unknown',
+            userAgent: event.requestContext?.identity?.userAgent || 'unknown',
+            metadata: {
+                success: true,
+            },
+        });
 
         return createResponse(200, {
             success: true,

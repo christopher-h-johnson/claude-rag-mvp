@@ -1,6 +1,7 @@
 import { APIGatewayProxyWebsocketEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { logUserAction } from '../../../shared/audit-logger/dist/audit-logger.js';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -64,6 +65,20 @@ export const handler = async (
         }));
 
         console.log(`Connection stored: ${connectionId} for user ${userId}`);
+
+        // Log WebSocket connection
+        await logUserAction({
+            eventType: 'query',
+            userId,
+            sessionId: connectionId,
+            timestamp: now,
+            ipAddress: 'websocket',
+            userAgent: 'websocket',
+            metadata: {
+                action: 'websocket_connect',
+                connectionId,
+            },
+        });
 
         return {
             statusCode: 200,

@@ -95,14 +95,14 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 5. Implement Audit Logger
-  - [ ] 5.1 Create structured logging utility for CloudWatch
+  - [x] 5.1 Create structured logging utility for CloudWatch
     - Implement logUserAction, logAPICall, logDocumentOperation functions
     - Use structured JSON format with consistent schema
     - Create separate log groups for different event types
     - Configure CloudWatch Logs Insights queries for common audit scenarios
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
   
-  - [ ]* 5.2 Write unit tests for audit logger
+  - [x] 5.2 Write unit tests for audit logger
     - Test JSON structure validation
     - Test log group routing
     - Test required field presence
