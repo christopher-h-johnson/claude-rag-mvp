@@ -1,7 +1,7 @@
-import { APIGatewayAuthorizerResult, APIGatewayTokenAuthorizerEvent, Context } from 'aws-lambda';
+import { APIGatewayAuthorizerResult, APIGatewayTokenAuthorizerEvent, APIGatewayRequestAuthorizerEvent, Context } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -41,16 +41,26 @@ interface SessionRecord {
 
 /**
  * Lambda Authorizer function for API Gateway
+ * Supports both TOKEN (REST API) and REQUEST (WebSocket) authorizer types
  * Validates JWT tokens and checks session validity in DynamoDB
  */
 export const handler = async (
-    event: APIGatewayTokenAuthorizerEvent,
+    event: APIGatewayTokenAuthorizerEvent | APIGatewayRequestAuthorizerEvent,
     context: Context
 ): Promise<APIGatewayAuthorizerResult> => {
-    console.log('Authorizer invoked', { requestId: context.awsRequestId });
+    console.log('Authorizer invoked', { requestId: context.awsRequestId, event: JSON.stringify(event) });
 
     try {
-        const token = event.authorizationToken;
+        let token: string | undefined;
+
+        // Handle different authorizer types
+        if ('authorizationToken' in event) {
+            // TOKEN authorizer (REST API)
+            token = event.authorizationToken;
+        } else if ('queryStringParameters' in event && event.queryStringParameters) {
+            // REQUEST authorizer (WebSocket API)
+            token = event.queryStringParameters.token;
+        }
 
         if (!token) {
             throw new Error('No authorization token provided');
@@ -92,7 +102,20 @@ export const handler = async (
         }
 
         // Generate IAM policy
-        const policy = generatePolicy(decoded.userId, 'Allow', event.methodArn, {
+        // For WebSocket APIs, we need to allow all routes, not just the specific methodArn
+        let resourceArn: string;
+        if ('methodArn' in event) {
+            // TOKEN authorizer (REST API)
+            resourceArn = event.methodArn;
+        } else {
+            // REQUEST authorizer (WebSocket API)
+            const requestEvent = event as APIGatewayRequestAuthorizerEvent;
+            resourceArn = requestEvent.methodArn || '*';
+            // Replace $connect with wildcard to allow all routes
+            resourceArn = resourceArn.replace(/\/\$connect$/, '/*');
+        }
+
+        const policy = generatePolicy(decoded.userId, 'Allow', resourceArn, {
             userId: decoded.userId,
             username: decoded.username,
             roles: JSON.stringify(decoded.roles),
@@ -113,7 +136,14 @@ export const handler = async (
     } catch (error) {
         console.error('Authorization failed', { error: error instanceof Error ? error.message : error });
         // Return deny policy
-        return generatePolicy('user', 'Deny', event.methodArn);
+        let resourceArn: string;
+        if ('methodArn' in event) {
+            resourceArn = event.methodArn;
+        } else {
+            const requestEvent = event as APIGatewayRequestAuthorizerEvent;
+            resourceArn = requestEvent.methodArn || '*';
+        }
+        return generatePolicy('user', 'Deny', resourceArn);
     }
 };
 

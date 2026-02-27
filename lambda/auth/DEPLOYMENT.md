@@ -350,8 +350,8 @@ REST_API_URL=$(terraform output -raw rest_api_url)
 curl -X POST "${REST_API_URL}/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "testuser",
-    "password": "TestPassword123!"
+    "username": "christopher",
+    "password": "cherasco"
   }'
 
 # Save the token from the response

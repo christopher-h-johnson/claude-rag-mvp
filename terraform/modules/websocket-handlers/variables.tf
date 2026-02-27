@@ -22,3 +22,8 @@ variable "websocket_api_execution_arn" {
   description = "WebSocket API Gateway execution ARN"
   type        = string
 }
+
+variable "kms_key_arn" {
+  description = "ARN of the KMS key for encryption/decryption"
+  type        = string
+}

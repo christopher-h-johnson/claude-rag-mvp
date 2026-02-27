@@ -69,11 +69,11 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Support message types: chat_response, typing_indicator, error, system
     - _Requirements: 2.2, 2.5_
   
-  - [ ]* 3.4 Write property test for WebSocket connection persistence
+  - [x] 3.4 Write property test for WebSocket connection persistence
     - **Property 5: WebSocket Connection Persistence**
     - **Validates: Requirements 2.3**
   
-  - [ ]* 3.5 Write property test for WebSocket reconnection
+  - [x] 3.5 Write property test for WebSocket reconnection
     - **Property 6: WebSocket Reconnection**
     - **Validates: Requirements 2.4**
 
