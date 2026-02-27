@@ -126,9 +126,13 @@ This chatbot system enables users to interact with Claude 3 Sonnet while automat
   - Connection persistence in DynamoDB
   - Property-based tests for connection management
 
+- **Rate Limiter** (Task 4)
+  - Sliding window algorithm with DynamoDB
+  - 60 requests/min for regular users, 300 for admins
+  - Comprehensive unit tests for rate limiting logic
+
 ### 🚧 In Progress
 
-- Rate Limiter (Task 4)
 - Audit Logger (Task 5)
 - Cache Layer (Task 6)
 

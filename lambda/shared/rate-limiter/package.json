@@ -1,0 +1,22 @@
+{
+    "name": "rate-limiter",
+    "version": "1.0.0",
+    "description": "Rate limiting middleware for Lambda functions",
+    "main": "dist/index.mjs",
+    "scripts": {
+        "build": "tsc",
+        "clean": "rm -rf dist",
+        "test": "vitest --run"
+    },
+    "dependencies": {
+        "@aws-sdk/client-dynamodb": "^3.600.0",
+        "@aws-sdk/lib-dynamodb": "^3.600.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.12",
+        "@types/aws-lambda": "^8.10.138",
+        "typescript": "^5.4.5",
+        "vitest": "^1.6.0"
+    },
+    "type": "module"
+}

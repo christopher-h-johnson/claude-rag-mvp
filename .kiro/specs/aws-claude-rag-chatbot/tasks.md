@@ -79,7 +79,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 4. Implement Rate Limiter
-  - [ ] 4.1 Create rate limiting middleware for Lambda
+  - [x] 4.1 Create rate limiting middleware for Lambda
     - Implement sliding window algorithm using DynamoDB atomic counters
     - Check RateLimits table for current request count
     - Increment counter with conditional write (limit: 60/min regular, 300/min admin)
@@ -87,7 +87,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Use DynamoDB TTL to auto-reset counters every 60 seconds
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
   
-  - [ ]* 4.2 Write unit tests for rate limiter
+  - [x] 4.2 Write unit tests for rate limiter
     - Test sliding window algorithm with various request patterns
     - Test counter reset behavior
     - Test admin vs regular user limits
