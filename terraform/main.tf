@@ -155,3 +155,24 @@ module "rest_api" {
   logout_function_name    = module.auth.logout_function_name
   logout_invoke_arn       = module.auth.logout_invoke_arn
 }
+
+module "opensearch_access_config" {
+  source = "./modules/opensearch-access-config"
+
+  environment                = var.environment
+  opensearch_endpoint        = module.opensearch.endpoint
+  master_user_password       = var.opensearch_master_user_password
+  master_password_secret_arn = "" # Optional: ARN of Secrets Manager secret
+  subnet_ids                 = module.networking.private_subnet_ids
+  security_group_ids         = [module.security.lambda_security_group_id]
+}
+
+module "vector_store_init" {
+  source = "./modules/vector-store-init"
+
+  environment           = var.environment
+  opensearch_endpoint   = module.opensearch.endpoint
+  opensearch_domain_arn = module.opensearch.domain_arn
+  subnet_ids            = module.networking.private_subnet_ids
+  security_group_ids    = [module.security.lambda_security_group_id]
+}

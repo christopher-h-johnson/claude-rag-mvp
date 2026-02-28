@@ -43,3 +43,9 @@ variable "master_user_password" {
   sensitive   = true
   default     = null
 }
+
+variable "lambda_role_arns" {
+  description = "List of Lambda IAM role ARNs that need access to OpenSearch"
+  type        = list(string)
+  default     = []
+}

@@ -167,7 +167,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: 3.1, 3.2, 3.4_
 
 
-- [ ] 8. Implement Embedding Generator with Bedrock Titan
+- [x] 8. Implement Embedding Generator with Bedrock Titan
   - [x] 8.1 Create embedding generation module
     - Initialize Bedrock client for Titan Embeddings (amazon.titan-embed-text-v1)
     - Implement generateEmbeddings function for single text input
@@ -189,7 +189,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 9. Implement Vector Store with OpenSearch
-  - [ ] 9.1 Create OpenSearch index with k-NN configuration
+  - [x] 9.1 Create OpenSearch index with k-NN configuration
     - Define index mapping with knn_vector field (1536 dimensions, cosinesimil)
     - Configure HNSW parameters: ef_construction=512, m=16, ef_search=512
     - Set refresh_interval=5s for near-real-time search

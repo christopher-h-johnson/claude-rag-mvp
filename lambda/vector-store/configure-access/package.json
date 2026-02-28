@@ -1,0 +1,23 @@
+{
+    "name": "configure-opensearch-access",
+    "version": "1.0.0",
+    "description": "Lambda function to configure OpenSearch role mapping for IAM roles",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "build:terraform": "bash build-for-terraform.sh",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "clean": "rm -rf dist node_modules"
+    },
+    "dependencies": {
+        "@opensearch-project/opensearch": "^2.12.0",
+        "aws-sdk": "^2.1691.0"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.145",
+        "@types/node": "^22.10.2",
+        "typescript": "^5.7.2",
+        "vitest": "^2.1.8"
+    }
+}
