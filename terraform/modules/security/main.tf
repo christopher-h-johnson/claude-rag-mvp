@@ -269,6 +269,36 @@ resource "aws_iam_role_policy_attachment" "lambda_kms" {
   policy_arn = aws_iam_policy.lambda_kms.arn
 }
 
+# IAM Policy for Lambda to access ElastiCache
+resource "aws_iam_policy" "lambda_elasticache" {
+  name_prefix = "${var.environment}-lambda-elasticache-"
+  description = "Policy for Lambda to access ElastiCache Redis"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "elasticache:DescribeCacheClusters",
+          "elasticache:DescribeReplicationGroups"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.environment}-chatbot-lambda-elasticache-policy"
+    Environment = var.environment
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_elasticache" {
+  role       = aws_iam_role.lambda_execution.name
+  policy_arn = aws_iam_policy.lambda_elasticache.arn
+}
+
 # IAM Role for API Gateway to invoke Lambda
 resource "aws_iam_role" "api_gateway" {
   name_prefix = "${var.environment}-api-gateway-"

@@ -97,3 +97,23 @@ output "rest_api_stage_name" {
   description = "REST API Gateway stage name"
   value       = module.rest_api.stage_name
 }
+
+output "redis_endpoint" {
+  description = "Redis primary endpoint address"
+  value       = module.cache.redis_endpoint
+}
+
+output "redis_port" {
+  description = "Redis port"
+  value       = module.cache.redis_port
+}
+
+output "redis_reader_endpoint" {
+  description = "Redis reader endpoint address"
+  value       = module.cache.redis_reader_endpoint
+}
+
+output "redis_configuration_endpoint" {
+  description = "Redis configuration endpoint"
+  value       = module.cache.redis_configuration_endpoint
+}

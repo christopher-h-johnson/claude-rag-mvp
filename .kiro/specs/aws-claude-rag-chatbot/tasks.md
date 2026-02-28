@@ -78,7 +78,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - **Validates: Requirements 2.4**
 
 
-- [ ] 4. Implement Rate Limiter
+- [x] 4. Implement Rate Limiter
   - [x] 4.1 Create rate limiting middleware for Lambda
     - Implement sliding window algorithm using DynamoDB atomic counters
     - Check RateLimits table for current request count
@@ -94,7 +94,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: 10.1, 10.2, 10.5_
 
 
-- [ ] 5. Implement Audit Logger
+- [x] 5. Implement Audit Logger
   - [x] 5.1 Create structured logging utility for CloudWatch
     - Implement logUserAction, logAPICall, logDocumentOperation functions
     - Use structured JSON format with consistent schema
@@ -109,21 +109,21 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: 11.1, 11.2, 11.3_
 
 
-- [ ] 6. Implement Cache Layer with ElastiCache Redis
-  - [ ] 6.1 Set up ElastiCache Redis cluster with Terraform
+- [x] 6. Implement Cache Layer with ElastiCache Redis
+  - [x] 6.1 Set up ElastiCache Redis cluster with Terraform
     - Deploy Redis cluster mode with 1GB max memory
     - Configure LRU eviction policy
     - Set up security group for Lambda access
     - _Requirements: 12.4_
   
-  - [ ] 6.2 Create cache utility module
+  - [x] 6.2 Create cache utility module
     - Implement getCachedResponse, setCachedResponse with SHA-256 query hashing
     - Implement getCachedSearchResults, setCachedSearchResults with embedding hashing
     - Set TTL: 3600s for Bedrock responses, 900s for search results
     - Handle Redis connection errors gracefully (cache miss on error)
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
   
-  - [ ]* 6.3 Write unit tests for cache layer
+  - [x] 6.3 Write unit tests for cache layer
     - Test cache hit/miss scenarios
     - Test TTL expiration
     - Test error handling

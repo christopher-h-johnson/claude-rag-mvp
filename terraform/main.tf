@@ -92,6 +92,20 @@ module "monitoring" {
   environment = var.environment
 }
 
+module "cache" {
+  source = "./modules/cache"
+
+  environment                  = var.environment
+  vpc_id                       = module.networking.vpc_id
+  subnet_ids                   = module.networking.private_subnet_ids
+  lambda_security_group_id     = module.security.lambda_security_group_id
+  node_type                    = var.redis_node_type
+  num_cache_nodes              = var.redis_num_cache_nodes
+  snapshot_retention_limit     = var.redis_snapshot_retention_limit
+  enable_encryption_at_rest    = var.redis_enable_encryption_at_rest
+  enable_encryption_in_transit = var.redis_enable_encryption_in_transit
+}
+
 module "auth" {
   source = "./modules/auth"
 
