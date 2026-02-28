@@ -119,10 +119,12 @@ This chatbot system enables users to interact with Claude 3 Sonnet while automat
   - Login endpoint with session management
   - Logout endpoint
   - Property-based tests for authentication flows
+  - Session expiration tests
 
 - **WebSocket Manager** (Task 3)
   - WebSocket API Gateway configuration
   - Connection/disconnection handlers
+  - Message sender utility with error handling
   - Connection persistence in DynamoDB
   - Property-based tests for connection management
 
@@ -131,17 +133,41 @@ This chatbot system enables users to interact with Claude 3 Sonnet while automat
   - 60 requests/min for regular users, 300 for admins
   - Comprehensive unit tests for rate limiting logic
 
+- **Audit Logger** (Task 5)
+  - Structured logging utility for CloudWatch
+  - Event logging (user actions, API calls, document operations)
+  - Separate log groups by event type
+  - Unit tests for audit logging
+
+- **Cache Layer with ElastiCache Redis** (Task 6)
+  - Redis cluster deployment with Terraform
+  - Cache utility module with LRU eviction
+  - Response caching (1 hour TTL)
+  - Search result caching (15 minutes TTL)
+  - Unit tests for cache operations
+
+- **Bedrock Service Integration** (Task 7.1-7.4)
+  - Claude 3 Sonnet client wrapper
+  - Streaming and non-streaming response support
+  - Retry logic with exponential backoff (1s, 2s, 4s)
+  - Conversation context management (sliding window)
+  - Property-based tests for API invocation
+  - Property-based tests for exponential backoff
+  - Comprehensive unit tests for streaming, error handling, and context formatting
+
 ### 🚧 In Progress
 
-- Audit Logger (Task 5)
-- Cache Layer (Task 6)
+- Embedding Generator (Task 8)
+- Vector Store implementation (Task 9)
 
 ### 📋 Planned
 
-- Bedrock Service integration
 - Document processing pipeline
-- Vector search implementation
-- Chat handler with RAG
+- RAG system orchestration
+- Chat handler with streaming
+- Upload handler
+- Query router
+- Performance monitoring
 - React frontend
 - End-to-end integration
 

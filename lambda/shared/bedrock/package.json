@@ -1,0 +1,21 @@
+{
+    "name": "bedrock",
+    "version": "1.0.0",
+    "description": "AWS Bedrock client wrapper for Claude 3 Sonnet",
+    "main": "dist/index.mjs",
+    "scripts": {
+        "build": "tsc",
+        "clean": "rm -rf dist",
+        "test": "vitest --run"
+    },
+    "dependencies": {
+        "@aws-sdk/client-bedrock-runtime": "^3.621.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.12",
+        "fast-check": "^3.15.0",
+        "typescript": "^5.4.5",
+        "vitest": "^1.6.0"
+    },
+    "type": "module"
+}

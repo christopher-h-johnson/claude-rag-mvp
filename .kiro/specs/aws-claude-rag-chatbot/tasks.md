@@ -131,7 +131,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 7. Implement Bedrock Service integration
-  - [ ] 7.1 Create Bedrock client wrapper for Claude 3 Sonnet
+  - [x] 7.1 Create Bedrock client wrapper for Claude 3 Sonnet
     - Initialize AWS SDK Bedrock Runtime client
     - Implement generateResponse with streaming support (InvokeModelWithResponseStream)
     - Implement generateResponseSync for non-streaming requests
@@ -139,28 +139,28 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Parse streaming response chunks and yield tokens incrementally
     - _Requirements: 3.1, 3.2_
   
-  - [ ] 7.2 Implement retry logic with exponential backoff
+  - [x] 7.2 Implement retry logic with exponential backoff
     - Wrap Bedrock API calls with retry decorator (3 attempts)
     - Implement exponential backoff: 1s, 2s, 4s delays
     - Handle throttling errors (ThrottlingException) specifically
     - Log retry attempts to CloudWatch
     - _Requirements: 3.3_
   
-  - [ ] 7.3 Implement conversation context management
+  - [x] 7.3 Implement conversation context management
     - Create function to format last 10 messages as Claude message array
     - Include role (user/assistant) and content for each message
     - Implement sliding window to limit context size
     - _Requirements: 3.4_
   
-  - [ ]* 7.4 Write property test for Bedrock API invocation
+  - [x] 7.4 Write property test for Bedrock API invocation
     - **Property 8: Bedrock API Invocation**
     - **Validates: Requirements 3.1**
   
-  - [ ]* 7.5 Write property test for retry with exponential backoff
+  - [x] 7.5 Write property test for retry with exponential backoff
     - **Property 9: Retry with Exponential Backoff**
     - **Validates: Requirements 3.3**
   
-  - [ ]* 7.6 Write unit tests for Bedrock Service
+  - [x] 7.6 Write unit tests for Bedrock Service
     - Test streaming response parsing
     - Test conversation context formatting
     - Test error handling
