@@ -738,7 +738,7 @@ interface DocumentMetadataRecord {
         "method": {
           "name": "hnsw",
           "space_type": "cosinesimil",
-          "engine": "nmslib",
+          "engine": "lucene",
           "parameters": {
             "ef_construction": 512,
             "m": 16

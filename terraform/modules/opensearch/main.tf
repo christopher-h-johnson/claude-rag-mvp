@@ -59,7 +59,7 @@ resource "aws_opensearch_domain" "main" {
 
   access_policies = jsonencode({
     Version = "2012-10-17"
-    Statement = [
+    Statement = concat([
       {
         Effect = "Allow"
         Principal = {
@@ -68,7 +68,23 @@ resource "aws_opensearch_domain" "main" {
         Action   = "es:*"
         Resource = "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.environment}-chatbot-opensearch/*"
       }
-    ]
+      ],
+      length(var.lambda_role_arns) > 0 ? [
+        {
+          Effect = "Allow"
+          Principal = {
+            AWS = var.lambda_role_arns
+          }
+          Action = [
+            "es:ESHttpGet",
+            "es:ESHttpPut",
+            "es:ESHttpPost",
+            "es:ESHttpHead",
+            "es:ESHttpDelete"
+          ]
+          Resource = "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.environment}-chatbot-opensearch/*"
+        }
+    ] : [])
   })
 
   tags = {

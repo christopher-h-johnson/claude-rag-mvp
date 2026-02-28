@@ -1,0 +1,23 @@
+{
+    "name": "init-index",
+    "version": "1.0.0",
+    "description": "Lambda function to initialize OpenSearch index with k-NN configuration",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "build:terraform": "bash build-for-terraform.sh",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "init": "ts-node scripts/init-local.ts"
+    },
+    "dependencies": {
+        "@opensearch-project/opensearch": "^2.12.0",
+        "aws-sdk": "^2.1540.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.3.3",
+        "vitest": "^1.0.4"
+    }
+}

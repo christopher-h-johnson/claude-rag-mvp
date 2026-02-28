@@ -117,3 +117,33 @@ output "redis_configuration_endpoint" {
   description = "Redis configuration endpoint"
   value       = module.cache.redis_configuration_endpoint
 }
+
+output "vector_store_init_function_name" {
+  description = "Vector store init index Lambda function name"
+  value       = module.vector_store_init.function_name
+}
+
+output "vector_store_init_function_arn" {
+  description = "Vector store init index Lambda function ARN"
+  value       = module.vector_store_init.function_arn
+}
+
+output "vector_store_init_lambda_role_arn" {
+  description = "Vector store init Lambda IAM role ARN (needed for OpenSearch role mapping)"
+  value       = module.vector_store_init.lambda_role_arn
+}
+
+output "vector_store_init_lambda_role_name" {
+  description = "Vector store init Lambda IAM role name"
+  value       = module.vector_store_init.lambda_role_name
+}
+
+output "opensearch_configure_access_function_name" {
+  description = "OpenSearch access configuration Lambda function name"
+  value       = module.opensearch_access_config.function_name
+}
+
+output "opensearch_configure_access_function_arn" {
+  description = "OpenSearch access configuration Lambda function ARN"
+  value       = module.opensearch_access_config.function_arn
+}
