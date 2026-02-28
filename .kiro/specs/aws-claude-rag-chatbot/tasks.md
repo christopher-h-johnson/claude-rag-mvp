@@ -168,20 +168,20 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 8. Implement Embedding Generator with Bedrock Titan
-  - [ ] 8.1 Create embedding generation module
+  - [x] 8.1 Create embedding generation module
     - Initialize Bedrock client for Titan Embeddings (amazon.titan-embed-text-v1)
     - Implement generateEmbeddings function for single text input
     - Implement batchGenerateEmbeddings with batch size of 25
     - Parse Bedrock response to extract 1536-dimension vectors
     - _Requirements: 6.1, 6.5_
   
-  - [ ] 8.2 Implement parallel batch processing
+  - [x] 8.2 Implement parallel batch processing
     - Process multiple batches concurrently using Promise.all
     - Handle rate limiting with retry logic
     - Track progress for large document sets
     - _Requirements: 6.2_
   
-  - [ ]* 8.3 Write unit tests for embedding generator
+  - [x] 8.3 Write unit tests for embedding generator
     - Test single embedding generation
     - Test batch processing
     - Test vector dimension validation (1536)
