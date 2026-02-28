@@ -52,3 +52,33 @@ variable "opensearch_master_user_password" {
   sensitive   = true
   default     = null
 }
+
+variable "redis_node_type" {
+  description = "ElastiCache Redis node type"
+  type        = string
+  default     = "cache.t3.micro"
+}
+
+variable "redis_num_cache_nodes" {
+  description = "Number of cache nodes in Redis cluster (1 for single node, 2+ for HA)"
+  type        = number
+  default     = 1
+}
+
+variable "redis_snapshot_retention_limit" {
+  description = "Number of days to retain Redis snapshots (0 to disable backups)"
+  type        = number
+  default     = 0
+}
+
+variable "redis_enable_encryption_at_rest" {
+  description = "Enable encryption at rest for Redis (adds cost)"
+  type        = bool
+  default     = false
+}
+
+variable "redis_enable_encryption_in_transit" {
+  description = "Enable encryption in transit for Redis (requires TLS)"
+  type        = bool
+  default     = false
+}
