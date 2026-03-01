@@ -33,3 +33,9 @@ variable "failed_processing_sns_topic_arn" {
   type        = string
   default     = ""
 }
+
+variable "aws_region" {
+  description = "AWS region for Bedrock API"
+  type        = string
+  default     = "us-east-1"
+}
