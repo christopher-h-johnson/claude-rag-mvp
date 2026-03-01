@@ -147,3 +147,34 @@ output "opensearch_configure_access_function_arn" {
   description = "OpenSearch access configuration Lambda function ARN"
   value       = module.opensearch_access_config.function_arn
 }
+
+# Notifications outputs
+output "failed_processing_topic_arn" {
+  description = "ARN of the failed processing SNS topic"
+  value       = module.notifications.failed_processing_topic_arn
+}
+
+output "failed_processing_topic_name" {
+  description = "Name of the failed processing SNS topic"
+  value       = module.notifications.failed_processing_topic_name
+}
+
+output "system_alerts_topic_arn" {
+  description = "ARN of the system alerts SNS topic"
+  value       = module.notifications.system_alerts_topic_arn
+}
+
+output "system_alerts_topic_name" {
+  description = "Name of the system alerts SNS topic"
+  value       = module.notifications.system_alerts_topic_name
+}
+
+output "operational_notifications_topic_arn" {
+  description = "ARN of the operational notifications SNS topic"
+  value       = module.notifications.operational_notifications_topic_arn
+}
+
+output "operational_notifications_topic_name" {
+  description = "Name of the operational notifications SNS topic"
+  value       = module.notifications.operational_notifications_topic_name
+}

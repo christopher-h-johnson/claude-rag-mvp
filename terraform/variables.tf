@@ -82,3 +82,9 @@ variable "redis_enable_encryption_in_transit" {
   type        = bool
   default     = false
 }
+
+variable "alert_email" {
+  description = "Email address for SNS alert notifications (optional). If provided, email subscriptions will be created for all notification topics."
+  type        = string
+  default     = ""
+}

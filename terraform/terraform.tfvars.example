@@ -1,0 +1,26 @@
+# AWS Configuration
+aws_region  = "us-east-1"
+environment = "dev"
+
+# Network Configuration
+vpc_cidr             = "10.0.0.0/16"
+availability_zones   = ["us-east-1a", "us-east-1b", "us-east-1c"]
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+public_subnet_cidrs  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+
+# OpenSearch Configuration
+opensearch_instance_type        = "t3.medium.search"
+opensearch_instance_count       = 3
+opensearch_master_user_password = "YourSecurePassword123!" # Change this!
+
+# Redis Cache Configuration
+redis_node_type                    = "cache.t3.micro"
+redis_num_cache_nodes              = 1
+redis_snapshot_retention_limit     = 0
+redis_enable_encryption_at_rest    = false
+redis_enable_encryption_in_transit = false
+
+# Notifications Configuration
+# Optional: Provide email address to receive SNS notifications
+# alert_email = "ops-team@example.com"
+alert_email = ""

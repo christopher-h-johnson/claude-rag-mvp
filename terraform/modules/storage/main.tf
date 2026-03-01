@@ -120,13 +120,8 @@ resource "aws_s3_bucket_policy" "documents" {
   })
 }
 
-# S3 Bucket Notification Configuration (placeholder for Lambda triggers)
-resource "aws_s3_bucket_notification" "documents" {
-  bucket = aws_s3_bucket.documents.id
-
-  # Lambda function triggers will be added in Lambda module
-  # This resource is created here to establish the bucket notification configuration
-}
+# S3 Bucket Notification Configuration is managed by the document-processor module
+# to avoid circular dependencies and ensure proper ordering
 
 # Create folder structure using S3 objects
 resource "aws_s3_object" "uploads_folder" {

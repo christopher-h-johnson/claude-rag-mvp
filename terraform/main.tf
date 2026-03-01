@@ -89,7 +89,16 @@ module "security" {
 module "monitoring" {
   source = "./modules/monitoring"
 
+  environment             = var.environment
+  system_alerts_topic_arn = module.notifications.system_alerts_topic_arn
+}
+
+module "notifications" {
+  source = "./modules/notifications"
+
   environment = var.environment
+  kms_key_id  = module.security.kms_key_id
+  alert_email = var.alert_email
 }
 
 module "cache" {
@@ -175,4 +184,16 @@ module "vector_store_init" {
   opensearch_domain_arn = module.opensearch.domain_arn
   subnet_ids            = module.networking.private_subnet_ids
   security_group_ids    = [module.security.lambda_security_group_id]
+}
+
+module "document_processor" {
+  source = "./modules/document-processor"
+
+  environment                     = var.environment
+  documents_bucket_name           = module.storage.documents_bucket_name
+  documents_bucket_arn            = module.storage.documents_bucket_arn
+  document_metadata_table_name    = module.database.document_metadata_table_name
+  document_metadata_table_arn     = module.database.document_metadata_table_arn
+  kms_key_arn                     = module.security.kms_key_arn
+  failed_processing_sns_topic_arn = module.notifications.failed_processing_topic_arn
 }
