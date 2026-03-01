@@ -196,4 +196,8 @@ module "document_processor" {
   document_metadata_table_arn     = module.database.document_metadata_table_arn
   kms_key_arn                     = module.security.kms_key_arn
   failed_processing_sns_topic_arn = module.notifications.failed_processing_topic_arn
+  opensearch_endpoint             = module.opensearch.endpoint
+  opensearch_index_name           = "documents"
+  vpc_subnet_ids                  = module.networking.private_subnet_ids
+  vpc_security_group_ids          = [module.security.lambda_security_group_id]
 }

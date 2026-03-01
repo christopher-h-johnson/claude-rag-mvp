@@ -1,16 +1,26 @@
 # Document Processor Lambda Module
 
-This Terraform module creates the Document Processor Lambda function and configures S3 event notifications to automatically trigger document processing when PDFs are uploaded.
+This Terraform module creates the Document Processor Lambda function, Generate Embeddings Lambda function, and configures S3 event notifications to automatically trigger document processing when PDFs are uploaded.
 
 ## Overview
 
-The Document Processor Lambda function:
+This module includes two Lambda functions:
+
+### 1. Document Processor Lambda (Python)
 - Extracts text from PDF documents using pdfplumber
 - Chunks text into 512-token segments with 50-token overlap
 - Uses tiktoken for accurate token counting (cl100k_base encoding)
 - Stores extracted text and chunks in S3 processed/ folder
 - Updates DynamoDB DocumentMetadata table with processing status
+- Invokes Generate Embeddings Lambda after chunking
 - Handles failures by moving documents to S3 failed/ folder
+
+### 2. Generate Embeddings Lambda (TypeScript)
+- Generates vector embeddings using Amazon Bedrock Titan Embeddings
+- Processes chunks in batches of 25 for optimal throughput
+- Creates 1536-dimension embeddings for semantic search
+- Includes retry logic with exponential backoff
+- Preserves chunk metadata (page numbers, document info)
 
 ## S3 Event Trigger Configuration
 
@@ -26,9 +36,11 @@ The module configures an S3 event notification that:
 ```
 1. User uploads PDF to S3: s3://bucket/uploads/{documentId}/{filename}.pdf
 2. S3 triggers event notification within 5 seconds
-3. Lambda function is invoked with S3 event payload
-4. Lambda extracts text, chunks it, and stores results
-5. DynamoDB DocumentMetadata table is updated with status
+3. Document Processor Lambda is invoked with S3 event payload
+4. Lambda extracts text, chunks it, and stores results in S3
+5. Document Processor invokes Generate Embeddings Lambda (async)
+6. Generate Embeddings Lambda creates vector embeddings
+7. DynamoDB DocumentMetadata table is updated with status
 ```
 
 ## Requirements
@@ -36,30 +48,54 @@ The module configures an S3 event notification that:
 This module validates the following requirements:
 - **Requirement 4.3**: Document upload triggers processing within 5 seconds
 - **Requirement 5.5**: Text extraction completes and triggers embedding generation
+- **Requirement 6.1**: Embeddings generated using Amazon Bedrock Titan Embeddings
 
 ## Resources Created
 
+### Document Processor
 - `aws_lambda_function.document_processor` - Lambda function for PDF processing
+- `aws_lambda_layer_version.document_processor_dependencies` - Python dependencies layer
 - `aws_iam_role.document_processor` - IAM role for Lambda execution
-- `aws_iam_role_policy.document_processor` - IAM policy with least privilege permissions
+- `aws_iam_role_policy.document_processor` - IAM policy with S3, DynamoDB, SNS permissions
+- `aws_iam_role_policy.document_processor_invoke_embeddings` - Permission to invoke Generate Embeddings
 - `aws_lambda_permission.allow_s3_invoke` - Permission for S3 to invoke Lambda
 - `aws_s3_bucket_notification.document_upload` - S3 event notification configuration
 
+### Generate Embeddings
+- `aws_lambda_function.generate_embeddings` - Lambda function for embedding generation
+- `aws_iam_role.generate_embeddings` - IAM role for Lambda execution
+- `aws_iam_role_policy.generate_embeddings` - IAM policy with S3, Bedrock permissions
+- `aws_cloudwatch_log_group.generate_embeddings` - CloudWatch log group (365-day retention)
+
 ## IAM Permissions
 
-The Lambda function has the following permissions:
+### Document Processor Lambda
 - **S3 Read**: `s3:GetObject` on `uploads/*`
 - **S3 Write**: `s3:PutObject` on `processed/*` and `failed/*`
 - **DynamoDB**: `dynamodb:UpdateItem`, `dynamodb:GetItem` on DocumentMetadata table
 - **SNS**: `sns:Publish` to failed processing topic (optional)
+- **Lambda**: `lambda:InvokeFunction` on Generate Embeddings Lambda
 - **KMS**: `kms:Decrypt`, `kms:GenerateDataKey` for S3 encryption
+- **CloudWatch Logs**: Standard logging permissions
+
+### Generate Embeddings Lambda
+- **S3 Read**: `s3:GetObject` on `processed/*`
+- **Bedrock**: `bedrock:InvokeModel` on Titan Embeddings model
+- **KMS**: `kms:Decrypt` for S3 encryption
 - **CloudWatch Logs**: Standard logging permissions
 
 ## Lambda Configuration
 
+### Document Processor
 - **Runtime**: Python 3.11
 - **Memory**: 3008 MB (high memory for PDF processing)
 - **Timeout**: 300 seconds (5 minutes for large PDFs)
+- **Handler**: `index.handler`
+
+### Generate Embeddings
+- **Runtime**: Node.js 20.x
+- **Memory**: 1024 MB
+- **Timeout**: 300 seconds (5 minutes for large documents)
 - **Handler**: `index.handler`
 
 ## Inputs
@@ -73,6 +109,7 @@ The Lambda function has the following permissions:
 | document_metadata_table_arn | DynamoDB DocumentMetadata table ARN | string | yes |
 | kms_key_arn | KMS key ARN for encryption | string | yes |
 | failed_processing_sns_topic_arn | SNS topic ARN for failure notifications | string | no |
+| aws_region | AWS region for Bedrock API | string | no (default: us-east-1) |
 
 ## Outputs
 
@@ -82,6 +119,11 @@ The Lambda function has the following permissions:
 | function_arn | Document Processor Lambda function ARN |
 | function_invoke_arn | Document Processor Lambda function invoke ARN |
 | role_arn | Document Processor Lambda IAM role ARN |
+| layer_arn | Document Processor Lambda layer ARN |
+| layer_version | Document Processor Lambda layer version |
+| generate_embeddings_function_name | Generate Embeddings Lambda function name |
+| generate_embeddings_function_arn | Generate Embeddings Lambda function ARN |
+| generate_embeddings_role_arn | Generate Embeddings Lambda IAM role ARN |
 
 ## Usage
 
@@ -90,13 +132,39 @@ module "document_processor" {
   source = "./modules/document-processor"
 
   environment                      = var.environment
+  aws_region                       = var.aws_region
   documents_bucket_name            = module.storage.documents_bucket_name
   documents_bucket_arn             = module.storage.documents_bucket_arn
   document_metadata_table_name     = module.database.document_metadata_table_name
   document_metadata_table_arn      = module.database.document_metadata_table_arn
   kms_key_arn                      = module.security.kms_key_arn
-  failed_processing_sns_topic_arn  = "" # Optional
+  failed_processing_sns_topic_arn  = module.notifications.failed_processing_topic_arn
 }
+```
+
+## Build Requirements
+
+Before deploying this module, you must build the Lambda functions:
+
+### 1. Build Document Processor Layer
+
+```bash
+cd lambda/document-processor/extract-text
+./build_layer_docker.sh  # or build_layer_docker.ps1 on Windows
+```
+
+### 2. Build Generate Embeddings Lambda
+
+```bash
+# Build shared embeddings module
+cd lambda/shared/embeddings
+npm install
+npm run build
+
+# Build Generate Embeddings Lambda
+cd ../../document-processor/generate-embeddings
+npm install
+npm run build
 ```
 
 ## S3 Event Notification Details

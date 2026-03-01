@@ -218,7 +218,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: 7.2, 7.3, 7.4_
 
 
-- [ ] 10. Implement Document Processor
+- [x] 10. Implement Document Processor
   - [x] 10.1 Create PDF text extraction Lambda function
     - Install pdfplumber library for complex layout handling
     - Implement extractText function to process PDF from S3
@@ -254,19 +254,19 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: 5.1, 5.2, 5.4_
 
 
-- [ ] 11. Implement document processing orchestration
-  - [ ] 11.1 Wire Document Processor to Embedding Generator
+- [x] 11. Implement document processing orchestration
+  - [x] 11.1 Wire Document Processor to Embedding Generator
     - After text extraction and chunking, invoke Embedding Generator
     - Pass text chunks with metadata to embedding generation
     - _Requirements: 5.5, 6.1_
   
-  - [ ] 11.2 Wire Embedding Generator to Vector Store
+  - [x] 11.2 Wire Embedding Generator to Vector Store
     - After embeddings are generated, store in OpenSearch
     - Include document metadata (documentId, filename, pageNumber, uploadedBy, uploadedAt)
     - Update DocumentMetadata table with chunkCount and status=completed
     - _Requirements: 6.3, 6.4_
   
-  - [ ]* 11.3 Write integration tests for document processing pipeline
+  - [x] 11.3 Write integration tests for document processing pipeline
     - Test end-to-end flow: upload → extract → chunk → embed → index
     - Verify document searchability after processing
     - _Requirements: 5.1, 5.4, 6.1, 6.3_

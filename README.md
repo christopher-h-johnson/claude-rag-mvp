@@ -104,7 +104,7 @@ This chatbot system enables users to interact with Claude 3 Sonnet while automat
 
 ## Current Implementation Status
 
-**Overall Progress: 10 of 26 tasks completed (38%)**
+**Overall Progress: 11 of 26 tasks completed (42%)**
 
 ```
 Infrastructure    ████████████████████ 100% (Task 1)
@@ -116,14 +116,14 @@ Caching           ████████████████████ 1
 Bedrock Service   ████████████████████ 100% (Task 7)
 Embeddings        ████████████████████ 100% (Task 8)
 Vector Store      ████████████████████ 100% (Task 9)
-Document Pipeline ████████░░░░░░░░░░░░  33% (Task 10 complete)
+Document Pipeline ████████████████████ 100% (Tasks 10-11)
 RAG System        ░░░░░░░░░░░░░░░░░░░░   0% (Tasks 13-14)
 Chat Handler      ░░░░░░░░░░░░░░░░░░░░   0% (Task 17)
 Frontend          ░░░░░░░░░░░░░░░░░░░░   0% (Tasks 21-22)
 Integration       ░░░░░░░░░░░░░░░░░░░░   0% (Task 24)
 ```
 
-### ✅ Completed (Tasks 1-10)
+### ✅ Completed (Tasks 1-11)
 
 #### **Infrastructure Foundation** (Task 1) ✓
 - VPC with private subnets and NAT Gateway
@@ -212,13 +212,29 @@ Integration       ░░░░░░░░░░░░░░░░░░░░  
 - Comprehensive unit tests (48 tests covering extraction, chunking, error handling)
 - Terraform module with SNS notifications for failures
 
-### 📋 Planned (Tasks 11-26)
+#### **Document Processing Orchestration** (Task 11) ✓
+- Document Processor → Embedding Generator integration
+  - Asynchronous Lambda invocation after text extraction and chunking
+  - Passes text chunks with full metadata (documentId, filename, pageNumber, uploadedBy, uploadedAt)
+- Embedding Generator → Vector Store integration
+  - Downloads chunks from S3
+  - Generates embeddings using Bedrock Titan (1024 dimensions)
+  - Batch indexes embeddings in OpenSearch with metadata
+  - Updates DocumentMetadata table with completion status (chunkCount, status=completed)
+- End-to-end integration tests
+  - Test suite validates complete pipeline: upload → extract → chunk → embed → index
+  - Verifies document searchability after processing
+  - Tests chunking overlap, concurrent processing, and error handling
+  - 5 comprehensive test cases covering all pipeline stages
+- Complete pipeline flow: PDF Upload → Extract Text → Chunk (512 tokens, 50 overlap) → Generate Embeddings → Index in OpenSearch → Update Metadata → Document Searchable
 
-#### **Document Processing Pipeline** (Tasks 11-12)
-- Embedding generation for document chunks
-- Vector indexing in OpenSearch
-- Document processing orchestration
-- Error handling and dead-letter queue
+### 📋 Planned (Tasks 12-26)
+
+#### **Document Upload Management** (Task 12)
+
+#### **Document Upload Management** (Task 12)
+- Document upload with presigned URLs
+- Document list and delete endpoints
 
 #### **RAG System & Query Routing** (Tasks 13-14)
 - Query classification (RAG vs direct LLM)
@@ -226,7 +242,7 @@ Integration       ░░░░░░░░░░░░░░░░░░░░  
 - Dynamic k selection for search results
 - Cache integration for query embeddings
 
-#### **Chat History & Upload Management** (Tasks 15, 12)
+#### **Chat History & Upload Management** (Task 15, 12)
 - Chat history persistence with encryption
 - History retrieval with pagination
 - Document upload with presigned URLs
@@ -266,7 +282,7 @@ Integration       ░░░░░░░░░░░░░░░░░░░░  
 - Performance benchmarks
 - Deployment documentation and runbooks
 
-**Progress: 10 of 26 tasks completed (38%)**
+**Progress: 11 of 26 tasks completed (42%)**
 
 See [tasks.md](.kiro/specs/aws-claude-rag-chatbot/tasks.md) for the complete implementation plan with detailed subtasks.
 

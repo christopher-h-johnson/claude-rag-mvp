@@ -1,0 +1,4 @@
+﻿{
+    "opensearchRole":  "all_access",
+    "lambdaRoleArn":  "arn:aws:iam::177981160483:role/dev-chatbot-generate-embeddings-role"
+}

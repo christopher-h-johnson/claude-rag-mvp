@@ -12,6 +12,7 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true,
@@ -24,5 +25,8 @@
         "node_modules",
         "dist",
         "**/*.test.ts"
-    ]
+    ],
+    "ts-node": {
+        "esm": true
+    }
 }

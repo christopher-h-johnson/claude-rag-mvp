@@ -7,7 +7,7 @@
  */
 export interface Embedding {
     chunkId: string;
-    vector: number[]; // 1536 dimensions
+    vector: number[]; // 1024 dimensions (Titan Embeddings V2)
     text: string;
     metadata: ChunkMetadata;
 }

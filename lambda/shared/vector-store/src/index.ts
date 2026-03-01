@@ -8,7 +8,7 @@
  * Requirements: 6.3, 7.2
  */
 
-export { OpenSearchVectorStore } from './opensearch-client';
+export { OpenSearchVectorStore } from './opensearch-client.js';
 export {
     VectorStore,
     Embedding,
@@ -16,4 +16,5 @@ export {
     SearchFilters,
     SearchResult,
     DocumentChunk
-} from './types';
+} from './types.js';
+

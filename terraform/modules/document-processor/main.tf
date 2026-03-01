@@ -153,6 +153,7 @@ resource "aws_lambda_function" "document_processor" {
     variables = {
       DOCUMENT_METADATA_TABLE     = var.document_metadata_table_name
       FAILED_PROCESSING_SNS_TOPIC = var.failed_processing_sns_topic_arn
+      EMBEDDING_GENERATOR_LAMBDA  = aws_lambda_function.generate_embeddings.function_name
       LOG_LEVEL                   = "INFO"
     }
   }
@@ -162,7 +163,10 @@ resource "aws_lambda_function" "document_processor" {
     Environment = var.environment
   }
 
-  depends_on = [aws_lambda_layer_version.document_processor_dependencies]
+  depends_on = [
+    aws_lambda_layer_version.document_processor_dependencies,
+    aws_lambda_function.generate_embeddings
+  ]
 }
 
 # Lambda Permission for S3 to invoke the function
@@ -187,4 +191,185 @@ resource "aws_s3_bucket_notification" "document_upload" {
   }
 
   depends_on = [aws_lambda_permission.allow_s3_invoke]
+}
+
+# ============================================================================
+# Generate Embeddings Lambda
+# ============================================================================
+
+# Package Generate Embeddings Lambda function code
+data "archive_file" "generate_embeddings" {
+  type        = "zip"
+  source_dir  = "${path.root}/../lambda/document-processor/generate-embeddings/dist"
+  output_path = "${path.root}/.terraform/lambda/generate-embeddings.zip"
+}
+
+# IAM Role for Generate Embeddings Lambda
+resource "aws_iam_role" "generate_embeddings" {
+  name = "${var.environment}-chatbot-generate-embeddings-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.environment}-chatbot-generate-embeddings-role"
+    Environment = var.environment
+  }
+}
+
+# IAM Policy for Generate Embeddings Lambda
+resource "aws_iam_role_policy" "generate_embeddings" {
+  name = "${var.environment}-chatbot-generate-embeddings-policy"
+  role = aws_iam_role.generate_embeddings.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      # CloudWatch Logs permissions
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      # S3 permissions - read from processed/
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${var.documents_bucket_arn}/processed/*"
+      },
+      # Bedrock permissions - invoke Titan Embeddings model
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel"
+        ]
+        Resource = [
+          "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v1",
+          "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v2:0"
+        ]
+      },
+      # KMS permissions for S3 encryption
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = var.kms_key_arn
+      },
+      # DynamoDB permissions - update DocumentMetadata table
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:UpdateItem"
+        ]
+        Resource = var.document_metadata_table_arn
+      },
+      # OpenSearch permissions - index embeddings with bulk operations
+      {
+        Effect = "Allow"
+        Action = [
+          "es:ESHttpPost",
+          "es:ESHttpPut",
+          "es:ESHttpGet",
+          "es:ESHttpHead"
+        ]
+        Resource = [
+          "arn:aws:es:*:*:domain/*/documents",
+          "arn:aws:es:*:*:domain/*/documents/*",
+          "arn:aws:es:*:*:domain/*/_bulk"
+        ]
+      },
+      # VPC permissions for Lambda in VPC
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Generate Embeddings Lambda Function
+resource "aws_lambda_function" "generate_embeddings" {
+  function_name    = "${var.environment}-chatbot-generate-embeddings"
+  filename         = data.archive_file.generate_embeddings.output_path
+  source_code_hash = data.archive_file.generate_embeddings.output_base64sha256
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  role             = aws_iam_role.generate_embeddings.arn
+  timeout          = 300 # 5 minutes for large documents
+  memory_size      = 1024
+
+  vpc_config {
+    subnet_ids         = var.vpc_subnet_ids
+    security_group_ids = var.vpc_security_group_ids
+  }
+
+  environment {
+    variables = {
+      LOG_LEVEL               = "INFO"
+      OPENSEARCH_ENDPOINT     = var.opensearch_endpoint
+      OPENSEARCH_INDEX        = var.opensearch_index_name
+      DOCUMENT_METADATA_TABLE = var.document_metadata_table_name
+    }
+  }
+
+  tags = {
+    Name        = "${var.environment}-chatbot-generate-embeddings"
+    Environment = var.environment
+  }
+}
+
+# CloudWatch Log Group for Generate Embeddings Lambda
+resource "aws_cloudwatch_log_group" "generate_embeddings" {
+  name              = "/aws/lambda/${aws_lambda_function.generate_embeddings.function_name}"
+  retention_in_days = 365
+
+  tags = {
+    Name        = "${var.environment}-chatbot-generate-embeddings-logs"
+    Environment = var.environment
+  }
+}
+
+# ============================================================================
+# Integration: Document Processor → Generate Embeddings
+# ============================================================================
+
+# IAM Policy to allow Document Processor to invoke Generate Embeddings Lambda
+resource "aws_iam_role_policy" "document_processor_invoke_embeddings" {
+  name = "${var.environment}-chatbot-document-processor-invoke-embeddings"
+  role = aws_iam_role.document_processor.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = aws_lambda_function.generate_embeddings.arn
+      }
+    ]
+  })
 }

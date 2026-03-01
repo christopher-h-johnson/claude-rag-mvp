@@ -36,10 +36,12 @@ logger.setLevel(logging.INFO)
 s3_client = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 sns_client = boto3.client('sns')
+lambda_client = boto3.client('lambda')
 
 # Environment variables
 DOCUMENT_METADATA_TABLE = os.environ.get('DOCUMENT_METADATA_TABLE', 'dev-chatbot-document-metadata')
 FAILED_PROCESSING_SNS_TOPIC = os.environ.get('FAILED_PROCESSING_SNS_TOPIC', '')
+EMBEDDING_GENERATOR_LAMBDA = os.environ.get('EMBEDDING_GENERATOR_LAMBDA', '')
 
 # Initialize DynamoDB table
 document_metadata_table = dynamodb.Table(DOCUMENT_METADATA_TABLE)
@@ -178,7 +180,11 @@ def extract_text(bucket: str, key: str) -> Dict[str, Any]:
     chunks = chunk_text(full_text, pages_data, document_id, metadata, chunk_size=512, overlap=50)
     
     # Store chunks in S3
-    store_chunks(bucket, document_id, chunks)
+    chunks_key = store_chunks(bucket, document_id, chunks)
+    
+    # Invoke Embedding Generator Lambda
+    logger.info(f"Invoking Embedding Generator for document: {document_id}")
+    invoke_embedding_generator(bucket, document_id, chunks_key)
     
     return {
         'text': extracted_text['text'],
@@ -451,7 +457,7 @@ def get_page_number_for_position(char_pos: int, page_map: List[Dict[str, int]]) 
     return 1  # Default to page 1
 
 
-def store_chunks(bucket: str, document_id: str, chunks: List[Dict[str, Any]]) -> None:
+def store_chunks(bucket: str, document_id: str, chunks: List[Dict[str, Any]]) -> str:
     """
     Store text chunks in S3 processed/ folder as JSON.
     
@@ -459,6 +465,9 @@ def store_chunks(bucket: str, document_id: str, chunks: List[Dict[str, Any]]) ->
         bucket: S3 bucket name
         document_id: Unique document identifier
         chunks: List of text chunks with metadata
+        
+    Returns:
+        S3 key where chunks were stored
     """
     chunks_key = f"processed/{document_id}/chunks.json"
     chunks_content = {
@@ -475,6 +484,8 @@ def store_chunks(bucket: str, document_id: str, chunks: List[Dict[str, Any]]) ->
     )
     
     logger.info(f"Stored {len(chunks)} chunks: s3://{bucket}/{chunks_key}")
+    
+    return chunks_key
 
 
 def store_extracted_text(
@@ -715,3 +726,51 @@ def format_exception_traceback(error: Exception) -> str:
     """
     import traceback
     return ''.join(traceback.format_exception(type(error), error, error.__traceback__))
+
+
+def invoke_embedding_generator(bucket: str, document_id: str, chunks_key: str) -> None:
+    """
+    Invoke the Embedding Generator Lambda function to generate embeddings for document chunks.
+    
+    This function triggers the embedding generation process after text extraction and chunking
+    are complete. The Embedding Generator Lambda will:
+    1. Download the chunks from S3
+    2. Generate embeddings using Amazon Bedrock Titan Embeddings
+    3. Pass embeddings to the Vector Store for indexing (handled in task 11.2)
+    
+    Args:
+        bucket: S3 bucket name
+        document_id: Unique document identifier
+        chunks_key: S3 key where chunks are stored
+        
+    Validates Requirements: 5.5, 6.1
+    """
+    if not EMBEDDING_GENERATOR_LAMBDA:
+        logger.warning("EMBEDDING_GENERATOR_LAMBDA not configured - skipping embedding generation")
+        return
+    
+    try:
+        # Prepare payload for Embedding Generator Lambda
+        payload = {
+            'bucket': bucket,
+            'documentId': document_id,
+            'chunksKey': chunks_key
+        }
+        
+        logger.info(f"Invoking Embedding Generator Lambda: {EMBEDDING_GENERATOR_LAMBDA}")
+        
+        # Invoke Lambda asynchronously (Event invocation type)
+        # This allows the document processor to complete without waiting for embeddings
+        response = lambda_client.invoke(
+            FunctionName=EMBEDDING_GENERATOR_LAMBDA,
+            InvocationType='Event',  # Asynchronous invocation
+            Payload=json.dumps(payload)
+        )
+        
+        logger.info(f"Embedding Generator invoked successfully - StatusCode: {response['StatusCode']}")
+        
+    except Exception as error:
+        logger.error(f"Failed to invoke Embedding Generator Lambda: {str(error)}", exc_info=True)
+        # Don't raise - embedding generation failure shouldn't fail document processing
+        # The document is still searchable by text, just not by semantic similarity
+

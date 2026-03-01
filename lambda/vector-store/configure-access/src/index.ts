@@ -1,6 +1,4 @@
 import { Client } from '@opensearch-project/opensearch';
-import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
-import * as AWS from 'aws-sdk';
 
 /**
  * Lambda function to configure OpenSearch role mapping for IAM roles.

@@ -33,3 +33,30 @@ variable "failed_processing_sns_topic_arn" {
   type        = string
   default     = ""
 }
+
+variable "aws_region" {
+  description = "AWS region for Bedrock API"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "opensearch_endpoint" {
+  description = "OpenSearch domain endpoint"
+  type        = string
+}
+
+variable "opensearch_index_name" {
+  description = "OpenSearch index name for documents"
+  type        = string
+  default     = "documents"
+}
+
+variable "vpc_subnet_ids" {
+  description = "VPC subnet IDs for Lambda functions (required for OpenSearch access)"
+  type        = list(string)
+}
+
+variable "vpc_security_group_ids" {
+  description = "VPC security group IDs for Lambda functions"
+  type        = list(string)
+}
