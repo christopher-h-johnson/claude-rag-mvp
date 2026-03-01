@@ -55,15 +55,15 @@ This chatbot system enables users to interact with Claude 3 Sonnet while automat
 ### Technology Stack
 
 - **Frontend**: React with TypeScript (planned)
-- **Backend**: AWS Lambda (Node.js/TypeScript)
+- **Backend**: AWS Lambda (Node.js 18.x/TypeScript)
 - **API Layer**: AWS API Gateway (REST + WebSocket)
 - **AI/ML**: Amazon Bedrock (Claude 3 Sonnet, Titan Embeddings)
-- **Vector Database**: Amazon OpenSearch with k-NN plugin
+- **Vector Database**: Amazon OpenSearch with k-NN plugin (HNSW algorithm)
 - **Storage**: Amazon S3 with KMS encryption
-- **Database**: Amazon DynamoDB
-- **Cache**: Amazon ElastiCache (Redis) (planned)
-- **Infrastructure**: Terraform
-- **Testing**: Jest with property-based testing (fast-check)
+- **Database**: Amazon DynamoDB with on-demand pricing
+- **Cache**: Amazon ElastiCache (Redis) with LRU eviction
+- **Infrastructure**: Terraform (modular architecture)
+- **Testing**: Vitest with property-based testing (fast-check)
 
 ## Project Structure
 
@@ -104,74 +104,160 @@ This chatbot system enables users to interact with Claude 3 Sonnet while automat
 
 ## Current Implementation Status
 
-### ✅ Completed
+**Overall Progress: 9 of 26 tasks completed (35%)**
 
-- **Infrastructure Foundation** (Task 1)
-  - VPC with private subnets and NAT Gateway
-  - S3 buckets with encryption and versioning
-  - DynamoDB tables (Sessions, ChatHistory, RateLimits, DocumentMetadata)
-  - OpenSearch cluster with k-NN plugin
-  - Security groups and IAM roles
-  - CloudWatch log groups
+```
+Infrastructure    ████████████████████ 100% (Task 1)
+Authentication    ████████████████████ 100% (Task 2)
+WebSocket         ████████████████████ 100% (Task 3)
+Rate Limiting     ████████████████████ 100% (Task 4)
+Audit Logging     ████████████████████ 100% (Task 5)
+Caching           ████████████████████ 100% (Task 6)
+Bedrock Service   ████████████████████ 100% (Task 7)
+Embeddings        ████████████████████ 100% (Task 8)
+Vector Store      ████████████████████ 100% (Task 9)
+Document Pipeline ░░░░░░░░░░░░░░░░░░░░   0% (Tasks 10-12)
+RAG System        ░░░░░░░░░░░░░░░░░░░░   0% (Tasks 13-14)
+Chat Handler      ░░░░░░░░░░░░░░░░░░░░   0% (Task 17)
+Frontend          ░░░░░░░░░░░░░░░░░░░░   0% (Tasks 21-22)
+Integration       ░░░░░░░░░░░░░░░░░░░░   0% (Task 24)
+```
 
-- **Authentication Service** (Task 2)
-  - Lambda Authorizer with JWT validation
-  - Login endpoint with session management
-  - Logout endpoint
-  - Property-based tests for authentication flows
-  - Session expiration tests
+### ✅ Completed (Tasks 1-9)
 
-- **WebSocket Manager** (Task 3)
-  - WebSocket API Gateway configuration
-  - Connection/disconnection handlers
-  - Message sender utility with error handling
-  - Connection persistence in DynamoDB
-  - Property-based tests for connection management
+#### **Infrastructure Foundation** (Task 1) ✓
+- VPC with private subnets and NAT Gateway
+- S3 buckets with encryption and versioning
+- DynamoDB tables (Sessions, ChatHistory, RateLimits, DocumentMetadata)
+- OpenSearch cluster with k-NN plugin
+- Security groups and IAM roles
+- CloudWatch log groups with 365-day retention
 
-- **Rate Limiter** (Task 4)
-  - Sliding window algorithm with DynamoDB
-  - 60 requests/min for regular users, 300 for admins
-  - Comprehensive unit tests for rate limiting logic
+#### **Authentication Service** (Task 2) ✓
+- Lambda Authorizer with JWT validation and 24-hour expiration
+- Login endpoint with session management
+- Logout endpoint with session revocation
+- Property-based tests for invalid credentials rejection
+- Property-based tests for session expiration
 
-- **Audit Logger** (Task 5)
-  - Structured logging utility for CloudWatch
-  - Event logging (user actions, API calls, document operations)
-  - Separate log groups by event type
-  - Unit tests for audit logging
+#### **WebSocket Manager** (Task 3) ✓
+- WebSocket API Gateway with $connect, $disconnect, and chat_message routes
+- Connection/disconnection handlers with DynamoDB persistence
+- Message sender utility with error handling for stale connections
+- Support for multiple message types (chat_response, typing_indicator, error, system)
+- Property-based tests for connection persistence and reconnection
 
-- **Cache Layer with ElastiCache Redis** (Task 6)
-  - Redis cluster deployment with Terraform
-  - Cache utility module with LRU eviction
-  - Response caching (1 hour TTL)
-  - Search result caching (15 minutes TTL)
-  - Unit tests for cache operations
+#### **Rate Limiter** (Task 4) ✓
+- Sliding window algorithm using DynamoDB atomic counters
+- 60 requests/min for regular users, 300 for admins
+- HTTP 429 responses with Retry-After headers
+- Automatic counter reset with DynamoDB TTL
+- Comprehensive unit tests for rate limiting patterns
 
-- **Bedrock Service Integration** (Task 7.1-7.4)
-  - Claude 3 Sonnet client wrapper
-  - Streaming and non-streaming response support
-  - Retry logic with exponential backoff (1s, 2s, 4s)
-  - Conversation context management (sliding window)
-  - Property-based tests for API invocation
-  - Property-based tests for exponential backoff
-  - Comprehensive unit tests for streaming, error handling, and context formatting
+#### **Audit Logger** (Task 5) ✓
+- Structured JSON logging utility for CloudWatch
+- Event logging (user actions, API calls, document operations)
+- Separate log groups by event type
+- CloudWatch Logs Insights queries for common scenarios
+- Unit tests for audit logging
 
-### 🚧 In Progress
+#### **Cache Layer with ElastiCache Redis** (Task 6) ✓
+- Redis cluster deployment with Terraform (1GB max memory)
+- Cache utility module with LRU eviction policy
+- Response caching with SHA-256 query hashing (1 hour TTL)
+- Search result caching with embedding hashing (15 minutes TTL)
+- Graceful error handling for cache misses
+- Unit tests for cache operations
 
-- Embedding Generator (Task 8)
-- Vector Store implementation (Task 9)
+#### **Bedrock Service Integration** (Task 7) ✓
+- Claude 3 Sonnet client wrapper with AWS SDK Bedrock Runtime
+- Streaming support via InvokeModelWithResponseStream
+- Non-streaming generateResponseSync for batch operations
+- Model parameters: max_tokens=2048, temperature=0.7, top_p=0.9
+- Retry logic with exponential backoff (3 attempts: 1s, 2s, 4s delays)
+- Throttling error handling (ThrottlingException)
+- Conversation context management (last 10 messages, sliding window)
+- Property-based tests for API invocation and retry behavior
+- Unit tests for streaming, error handling, and context formatting
 
-### 📋 Planned
+#### **Embedding Generator with Bedrock Titan** (Task 8) ✓
+- Titan Embeddings client (amazon.titan-embed-text-v1)
+- Single text embedding generation (1536 dimensions)
+- Batch processing with batch size of 25
+- Parallel batch processing using Promise.all
+- Rate limiting with retry logic
+- Progress tracking for large document sets
+- Unit tests for embedding generation and batch processing
 
-- Document processing pipeline
-- RAG system orchestration
-- Chat handler with streaming
-- Upload handler
-- Query router
-- Performance monitoring
-- React frontend
-- End-to-end integration
+#### **Vector Store with OpenSearch** (Task 9) ✓
+- OpenSearch index with k-NN configuration (1536 dimensions, cosine similarity)
+- HNSW parameters: ef_construction=512, m=16, ef_search=512
+- 5-second refresh interval for near-real-time search
+- OpenSearch client wrapper with VPC endpoint
+- Single and bulk embedding indexing
+- k-NN similarity search with configurable k
+- Metadata filtering (documentIds, dateRange, custom metadata)
+- Document deletion (removes all chunks)
+- Comprehensive unit tests (29 tests covering indexing, search, filtering, edge cases)
 
-See [tasks.md](.kiro/specs/aws-claude-rag-chatbot/tasks.md) for the complete implementation plan.
+### 📋 Planned (Tasks 10-26)
+
+#### **Document Processing Pipeline** (Tasks 10-12)
+- PDF text extraction with pdfplumber
+- Text chunking with token counting (512 tokens, 50 overlap)
+- Error handling and dead-letter queue
+- S3 event triggers for automatic processing
+- Document processing orchestration
+
+#### **RAG System & Query Routing** (Tasks 13-14)
+- Query classification (RAG vs direct LLM)
+- Context retrieval and assembly
+- Dynamic k selection for search results
+- Cache integration for query embeddings
+
+#### **Chat History & Upload Management** (Tasks 15, 12)
+- Chat history persistence with encryption
+- History retrieval with pagination
+- Document upload with presigned URLs
+- Document list and delete endpoints
+
+#### **Main Chat Handler** (Task 17)
+- WebSocket chat message processing
+- RAG retrieval integration
+- Streaming response delivery
+- Response caching and persistence
+- Circuit breaker for external services
+
+#### **Performance Monitoring** (Task 18)
+- CloudWatch metrics emission
+- Custom metrics (query latency, token usage, search latency)
+- CloudWatch dashboard with key metrics
+- Alarms for response time and error rate
+
+#### **API Gateway & Lambda Configuration** (Tasks 19-20)
+- REST API Gateway with CORS
+- API Gateway throttling and WAF
+- Lambda concurrency limits and provisioned concurrency
+- VPC networking for Lambda functions
+
+#### **Frontend & Deployment** (Tasks 21-22)
+- React application with TypeScript
+- Authentication components
+- WebSocket connection manager
+- Chat interface with streaming
+- Document management UI
+- S3 + CloudFront deployment
+
+#### **Integration & Testing** (Tasks 24-25)
+- End-to-end integration tests
+- Error scenario and resilience testing
+- Security configuration verification
+- Performance benchmarks
+- Deployment documentation and runbooks
+
+**Progress: 9 of 26 tasks completed (35%)**
+
+See [tasks.md](.kiro/specs/aws-claude-rag-chatbot/tasks.md) for the complete implementation plan with detailed subtasks.
 
 ## Getting Started
 
@@ -225,7 +311,7 @@ See [tasks.md](.kiro/specs/aws-claude-rag-chatbot/tasks.md) for the complete imp
 
 ### Testing
 
-Run tests for individual Lambda functions:
+Run tests for individual components:
 
 ```bash
 # Authentication tests
@@ -234,6 +320,22 @@ npm test
 
 # WebSocket tests
 cd lambda/websocket/connect
+npm test
+
+# Bedrock Service tests
+cd lambda/shared/bedrock
+npm test
+
+# Embedding Generator tests
+cd lambda/shared/embeddings
+npm test
+
+# Vector Store tests
+cd lambda/shared/vector-store
+npm test
+
+# Rate Limiter tests
+cd lambda/shared/rate-limiter
 npm test
 ```
 
@@ -342,16 +444,21 @@ CloudWatch dashboards track:
 
 The project uses property-based testing with fast-check to validate universal correctness properties:
 
-- **Property 1**: Invalid credentials always rejected
-- **Property 2**: Session tokens expire after 24 hours
-- **Property 5**: WebSocket connections persist correctly
-- **Property 6**: WebSocket reconnection works reliably
+- **Property 1**: Invalid credentials always rejected (Authentication)
+- **Property 2**: Session tokens expire after 24 hours (Authentication)
+- **Property 5**: WebSocket connections persist correctly (WebSocket)
+- **Property 6**: WebSocket reconnection works reliably (WebSocket)
+- **Property 8**: Bedrock API invocation succeeds for valid requests (Bedrock)
+- **Property 9**: Retry with exponential backoff follows correct timing (Bedrock)
 
 ### Unit Testing
 
-- Jest for unit tests
-- AWS SDK mocking with aws-sdk-client-mock
-- High coverage for business logic
+- Vitest for unit tests with comprehensive coverage
+- AWS SDK mocking with vitest mocks
+- 29 tests for Vector Store (indexing, search, filtering)
+- 20+ tests for Bedrock Service (streaming, retry, context)
+- 15+ tests for Embedding Generator (batch processing, dimensions)
+- High coverage for business logic and edge cases
 
 ### Integration Testing (Planned)
 

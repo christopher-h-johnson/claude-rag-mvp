@@ -196,7 +196,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Create index with proper field types for metadata
     - _Requirements: 7.3_
   
-  - [ ] 9.2 Implement OpenSearch client wrapper
+  - [x] 9.2 Implement OpenSearch client wrapper
     - Initialize OpenSearch client with VPC endpoint
     - Implement indexEmbedding for single document chunk
     - Implement batchIndexEmbeddings using bulk API
@@ -204,13 +204,13 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Implement deleteDocument to remove all chunks for a document
     - _Requirements: 6.3, 7.2_
   
-  - [ ] 9.3 Implement search with metadata filtering
+  - [x] 9.3 Implement search with metadata filtering
     - Add support for filtering by documentIds, dateRange, metadata
     - Combine k-NN search with bool query filters
     - Return results with score, chunk text, and metadata
     - _Requirements: 7.4_
   
-  - [ ]* 9.4 Write unit tests for Vector Store
+  - [x] 9.4 Write unit tests for Vector Store
     - Test index creation
     - Test bulk indexing
     - Test k-NN search accuracy
