@@ -219,7 +219,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 10. Implement Document Processor
-  - [ ] 10.1 Create PDF text extraction Lambda function
+  - [x] 10.1 Create PDF text extraction Lambda function
     - Install pdfplumber library for complex layout handling
     - Implement extractText function to process PDF from S3
     - Extract text with page numbers and metadata
@@ -227,27 +227,27 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Store extracted text in S3 processed/ folder as JSON
     - _Requirements: 5.1, 5.2_
   
-  - [ ] 10.2 Implement text chunking with token counting
+  - [x] 10.2 Implement text chunking with token counting
     - Install tiktoken library for accurate token counting (cl100k_base encoding)
     - Implement chunkText function with 512 token chunks and 50 token overlap
     - Preserve page numbers and chunk indices in metadata
     - Generate unique chunkId for each chunk
     - _Requirements: 5.4_
   
-  - [ ] 10.3 Implement error handling and dead-letter queue
+  - [x] 10.3 Implement error handling and dead-letter queue
     - Wrap processing in try-catch with detailed error logging
     - Move failed documents to S3 failed/ folder with error.json
     - Update DocumentMetadata table with processing status
     - Send notification to SNS topic for failed processing
     - _Requirements: 5.3, 14.3_
   
-  - [ ] 10.4 Create S3 event trigger for document processing
+  - [x] 10.4 Create S3 event trigger for document processing
     - Configure S3 event notification for uploads/ folder
     - Trigger Document Processor Lambda on object creation
     - Ensure trigger fires within 5 seconds of upload
     - _Requirements: 4.3, 5.5_
   
-  - [ ]* 10.5 Write unit tests for Document Processor
+  - [x] 10.5 Write unit tests for Document Processor
     - Test PDF text extraction with sample documents
     - Test chunking algorithm with various text lengths
     - Test error handling for corrupted PDFs

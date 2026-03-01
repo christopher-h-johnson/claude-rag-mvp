@@ -145,6 +145,8 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
     FunctionName = "${var.environment}-chatbot-*"
   }
 
+  alarm_actions = var.system_alerts_topic_arn != "" ? [var.system_alerts_topic_arn] : []
+
   tags = {
     Name        = "${var.environment}-chatbot-lambda-errors-alarm"
     Environment = var.environment
@@ -163,6 +165,8 @@ resource "aws_cloudwatch_metric_alarm" "api_gateway_5xx" {
   threshold           = 10
   alarm_description   = "This metric monitors API Gateway 5XX errors"
   treat_missing_data  = "notBreaching"
+
+  alarm_actions = var.system_alerts_topic_arn != "" ? [var.system_alerts_topic_arn] : []
 
   tags = {
     Name        = "${var.environment}-chatbot-api-gateway-5xx-alarm"
@@ -186,6 +190,8 @@ resource "aws_cloudwatch_metric_alarm" "high_latency" {
   dimensions = {
     FunctionName = "${var.environment}-chatbot-chat"
   }
+
+  alarm_actions = var.system_alerts_topic_arn != "" ? [var.system_alerts_topic_arn] : []
 
   tags = {
     Name        = "${var.environment}-chatbot-high-latency-alarm"
