@@ -6,7 +6,7 @@ import * as AWS from 'aws-sdk';
  * OpenSearch index configuration for document embeddings with k-NN search
  * 
  * This configuration creates an index optimized for:
- * - 1536-dimension vectors (matching Titan Embeddings output)
+ * - 1024-dimension vectors (matching Titan Embeddings V2 output)
  * - Cosine similarity metric for semantic search
  * - HNSW algorithm for approximate nearest neighbor search
  * - Near-real-time search with 5s refresh interval
@@ -66,7 +66,7 @@ function getIndexConfiguration(): IndexMapping {
                 text: { type: 'text' },
                 embedding: {
                     type: 'knn_vector',
-                    dimension: 1536,
+                    dimension: 1024,
                     method: {
                         name: 'hnsw',
                         space_type: 'cosinesimil',
@@ -113,6 +113,41 @@ function createOpenSearchClient(endpoint: string): Client {
 }
 
 /**
+ * Deletes the OpenSearch index if it exists
+ * 
+ * @param endpoint - OpenSearch domain endpoint
+ * @returns Success status and message
+ */
+export async function deleteIndex(endpoint: string): Promise<{ success: boolean; message: string }> {
+    const client = createOpenSearchClient(endpoint);
+
+    try {
+        // Check if index exists
+        const indexExists = await client.indices.exists({ index: INDEX_NAME });
+
+        if (!indexExists.body) {
+            return {
+                success: true,
+                message: `Index '${INDEX_NAME}' does not exist, nothing to delete`
+            };
+        }
+
+        // Delete the index
+        await client.indices.delete({ index: INDEX_NAME });
+
+        console.log(`Successfully deleted index '${INDEX_NAME}'`);
+
+        return {
+            success: true,
+            message: `Index '${INDEX_NAME}' deleted successfully`
+        };
+    } catch (error) {
+        console.error('Error deleting OpenSearch index:', error);
+        throw error;
+    }
+}
+
+/**
  * Initializes the OpenSearch index with k-NN configuration
  * 
  * @param endpoint - OpenSearch domain endpoint
@@ -152,7 +187,22 @@ export async function initializeIndex(endpoint: string): Promise<{ success: bool
 }
 
 /**
- * Lambda handler for index initialization
+ * Lambda handler for index operations
+ * 
+ * Supports two operations via the 'action' field in the event:
+ * - 'create' or undefined: Creates the index (default)
+ * - 'delete': Deletes the index
+ * - 'recreate': Deletes and recreates the index
+ * 
+ * @example
+ * // Create index
+ * { "action": "create" }
+ * 
+ * // Delete index
+ * { "action": "delete" }
+ * 
+ * // Recreate index (delete + create)
+ * { "action": "recreate" }
  */
 export async function handler(event: any): Promise<any> {
     const endpoint = process.env.OPENSEARCH_ENDPOINT;
@@ -166,8 +216,31 @@ export async function handler(event: any): Promise<any> {
         };
     }
 
+    const action = event.action || 'create';
+
     try {
-        const result = await initializeIndex(endpoint);
+        let result;
+
+        switch (action) {
+            case 'delete':
+                result = await deleteIndex(endpoint);
+                break;
+
+            case 'recreate':
+                // Delete first
+                const deleteResult = await deleteIndex(endpoint);
+                console.log('Delete result:', deleteResult.message);
+
+                // Then create
+                result = await initializeIndex(endpoint);
+                result.message = `Index recreated: ${deleteResult.message}; ${result.message}`;
+                break;
+
+            case 'create':
+            default:
+                result = await initializeIndex(endpoint);
+                break;
+        }
 
         return {
             statusCode: 200,
@@ -177,7 +250,7 @@ export async function handler(event: any): Promise<any> {
         return {
             statusCode: 500,
             body: JSON.stringify({
-                error: 'Failed to initialize index',
+                error: `Failed to ${action} index`,
                 message: error.message
             })
         };

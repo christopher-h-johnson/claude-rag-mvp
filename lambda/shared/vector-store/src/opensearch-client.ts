@@ -1,7 +1,7 @@
 import { Client } from '@opensearch-project/opensearch';
 import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
-import * as AWS from 'aws-sdk';
-import { VectorStore, Embedding, SearchFilters, SearchResult, DocumentChunk } from './types';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
+import { VectorStore, Embedding, SearchFilters, SearchResult, DocumentChunk } from './types.js';
 
 /**
  * OpenSearch client wrapper for vector storage and search operations
@@ -33,10 +33,7 @@ export class OpenSearchVectorStore implements VectorStore {
             ...AwsSigv4Signer({
                 region: awsRegion,
                 service: 'es',
-                getCredentials: () => {
-                    const credentials = new AWS.EnvironmentCredentials('AWS');
-                    return Promise.resolve(credentials);
-                }
+                getCredentials: defaultProvider()
             }),
             node: `https://${endpoint}`
         });
@@ -133,7 +130,7 @@ export class OpenSearchVectorStore implements VectorStore {
      * nearest neighbor search. Supports optional filtering by document IDs,
      * date range, and custom metadata.
      * 
-     * @param queryVector - Query embedding vector (1536 dimensions)
+     * @param queryVector - Query embedding vector (1024 dimensions)
      * @param k - Number of results to return
      * @param filters - Optional filters for search refinement
      * @returns Array of search results with scores and document chunks
@@ -147,8 +144,8 @@ export class OpenSearchVectorStore implements VectorStore {
     ): Promise<SearchResult[]> {
         try {
             // Validate query vector dimensions
-            if (queryVector.length !== 1536) {
-                throw new Error(`Invalid query vector dimension: expected 1536, got ${queryVector.length}`);
+            if (queryVector.length !== 1024) {
+                throw new Error(`Invalid query vector dimension: expected 1024, got ${queryVector.length}`);
             }
 
             // Build k-NN query

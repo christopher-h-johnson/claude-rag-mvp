@@ -259,7 +259,10 @@ resource "aws_iam_role_policy" "generate_embeddings" {
         Action = [
           "bedrock:InvokeModel"
         ]
-        Resource = "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v1"
+        Resource = [
+          "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v1",
+          "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v2:0"
+        ]
       },
       # KMS permissions for S3 encryption
       {
@@ -268,6 +271,39 @@ resource "aws_iam_role_policy" "generate_embeddings" {
           "kms:Decrypt"
         ]
         Resource = var.kms_key_arn
+      },
+      # DynamoDB permissions - update DocumentMetadata table
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:UpdateItem"
+        ]
+        Resource = var.document_metadata_table_arn
+      },
+      # OpenSearch permissions - index embeddings with bulk operations
+      {
+        Effect = "Allow"
+        Action = [
+          "es:ESHttpPost",
+          "es:ESHttpPut",
+          "es:ESHttpGet",
+          "es:ESHttpHead"
+        ]
+        Resource = [
+          "arn:aws:es:*:*:domain/*/documents",
+          "arn:aws:es:*:*:domain/*/documents/*",
+          "arn:aws:es:*:*:domain/*/_bulk"
+        ]
+      },
+      # VPC permissions for Lambda in VPC
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface"
+        ]
+        Resource = "*"
       }
     ]
   })
@@ -284,9 +320,17 @@ resource "aws_lambda_function" "generate_embeddings" {
   timeout          = 300 # 5 minutes for large documents
   memory_size      = 1024
 
+  vpc_config {
+    subnet_ids         = var.vpc_subnet_ids
+    security_group_ids = var.vpc_security_group_ids
+  }
+
   environment {
     variables = {
-      LOG_LEVEL  = "INFO"
+      LOG_LEVEL               = "INFO"
+      OPENSEARCH_ENDPOINT     = var.opensearch_endpoint
+      OPENSEARCH_INDEX        = var.opensearch_index_name
+      DOCUMENT_METADATA_TABLE = var.document_metadata_table_name
     }
   }
 

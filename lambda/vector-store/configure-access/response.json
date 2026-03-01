@@ -1,0 +1,1 @@
+{"statusCode":200,"body":"{\"success\":true,\"message\":\"Successfully mapped Lambda role arn:aws:iam::177981160483:role/dev-chatbot-generate-embeddings-role to OpenSearch role all_access\"}"}

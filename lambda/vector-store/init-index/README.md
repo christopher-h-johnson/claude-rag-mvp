@@ -1,13 +1,16 @@
-# OpenSearch Index Initialization
+# OpenSearch Index Management
 
-This Lambda function initializes the OpenSearch index with k-NN (k-Nearest Neighbor) configuration for vector similarity search.
+This Lambda function manages the OpenSearch index with k-NN (k-Nearest Neighbor) configuration for vector similarity search.
 
 ## Overview
 
-The function creates an OpenSearch index named `documents` with the following configuration:
+The function provides three operations for the `documents` index:
+- **Create**: Initialize a new index with k-NN configuration
+- **Delete**: Remove an existing index
+- **Recreate**: Delete and recreate the index (useful for schema changes)
 
 ### Vector Configuration
-- **Dimensions**: 1536 (matching Amazon Bedrock Titan Embeddings output)
+- **Dimensions**: 1024 (matching Amazon Bedrock Titan Embeddings V2 output)
 - **Similarity Metric**: Cosine similarity
 - **Algorithm**: HNSW (Hierarchical Navigable Small World)
 - **Engine**: Lucene (native OpenSearch 3.0+ engine)
@@ -30,11 +33,82 @@ The index includes the following fields for document tracking:
 - `pageNumber` (integer) - Page number in source document
 - `chunkIndex` (integer) - Sequential chunk number
 - `text` (text) - The actual text content
-- `embedding` (knn_vector) - 1536-dimension vector embedding
+- `embedding` (knn_vector) - 1024-dimension vector embedding (Titan V2)
 - `uploadedAt` (date) - Upload timestamp
 - `uploadedBy` (keyword) - User who uploaded the document
 
 ## Usage
+
+### Create Index (Default)
+
+Creates a new index if it doesn't exist:
+
+```bash
+aws lambda invoke \
+  --function-name <env>-chatbot-vector-store-init \
+  --payload '{"action":"create"}' \
+  response.json
+
+cat response.json
+```
+
+Or simply:
+```bash
+aws lambda invoke \
+  --function-name <env>-chatbot-vector-store-init \
+  --payload '{}' \
+  response.json
+```
+
+**Response**:
+```json
+{
+  "statusCode": 200,
+  "body": "{\"success\":true,\"message\":\"Index 'documents' created successfully with k-NN configuration\"}"
+}
+```
+
+### Delete Index
+
+Deletes an existing index:
+
+```bash
+aws lambda invoke \
+  --function-name <env>-chatbot-vector-store-init \
+  --payload '{"action":"delete"}' \
+  response.json
+
+cat response.json
+```
+
+**Response**:
+```json
+{
+  "statusCode": 200,
+  "body": "{\"success\":true,\"message\":\"Index 'documents' deleted successfully\"}"
+}
+```
+
+### Recreate Index
+
+Deletes and recreates the index (useful for dimension changes):
+
+```bash
+aws lambda invoke \
+  --function-name <env>-chatbot-vector-store-init \
+  --payload '{"action":"recreate"}' \
+  response.json
+
+cat response.json
+```
+
+**Response**:
+```json
+{
+  "statusCode": 200,
+  "body": "{\"success\":true,\"message\":\"Index recreated: Index 'documents' deleted successfully; Index 'documents' created successfully with k-NN configuration\"}"
+}
+```
 
 ### As a Lambda Function
 
@@ -52,11 +126,17 @@ The function reads the OpenSearch endpoint from the `OPENSEARCH_ENDPOINT` enviro
 ### Programmatically
 
 ```typescript
-import { initializeIndex } from './index';
+import { initializeIndex, deleteIndex } from './index';
 
 const endpoint = 'your-opensearch-endpoint.us-east-1.es.amazonaws.com';
-const result = await initializeIndex(endpoint);
-console.log(result.message);
+
+// Create index
+const createResult = await initializeIndex(endpoint);
+console.log(createResult.message);
+
+// Delete index
+const deleteResult = await deleteIndex(endpoint);
+console.log(deleteResult.message);
 ```
 
 ## Environment Variables

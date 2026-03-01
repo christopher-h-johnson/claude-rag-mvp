@@ -23,6 +23,8 @@ The Generate Embeddings Lambda is part of the document processing pipeline:
 Validates:
 - **Requirement 5.5**: Document processing triggers embedding generation
 - **Requirement 6.1**: Embeddings generated using Amazon Bedrock Titan Embeddings
+- **Requirement 6.3**: Embeddings stored in Vector Store with document metadata
+- **Requirement 6.4**: Each embedding associated with source document ID and page number
 
 ## Input Event
 
@@ -42,42 +44,54 @@ Validates:
   "body": {
     "documentId": "uuid-document-id",
     "embeddingsCount": 42,
-    "embeddings": [
-      {
-        "chunkId": "uuid-document-id#chunk#0",
-        "documentId": "uuid-document-id",
-        "embedding": [0.123, 0.456, ...],
-        "text": "chunk text...",
-        "chunkIndex": 0,
-        "pageNumber": 1,
-        "metadata": {
-          "filename": "document.pdf",
-          "uploadedBy": "user-id",
-          "uploadedAt": 1234567890,
-          "pageCount": 10
-        }
-      }
-    ]
+    "status": "completed",
+    "message": "Embeddings generated and indexed successfully"
   }
 }
 ```
 
+The function also:
+- Indexes embeddings in OpenSearch for semantic search
+- Updates DocumentMetadata table with `chunkCount` and `status=completed`
+
 ## Environment Variables
 
 - `AWS_REGION`: AWS region for Bedrock API (default: us-east-1)
+- `OPENSEARCH_ENDPOINT`: OpenSearch domain endpoint (without https://)
+- `OPENSEARCH_INDEX`: Index name for documents (default: documents)
+- `DOCUMENT_METADATA_TABLE`: DynamoDB table name for document metadata
 
 ## Dependencies
 
 - `@aws-sdk/client-bedrock-runtime`: Bedrock API client
 - `@aws-sdk/client-s3`: S3 client for downloading chunks
+- `@aws-sdk/client-dynamodb`: DynamoDB client for updating document metadata
 - `../../../shared/embeddings`: Shared embedding generator module
+- `../../../shared/vector-store`: Shared OpenSearch vector store client
+
+**Note**: This Lambda uses ES modules. See [ES_MODULES_SETUP.md](./ES_MODULES_SETUP.md) for configuration details.
 
 ## Build
 
+### For Development (Type Checking)
 ```bash
 npm install
 npm run build
 ```
+
+### For Lambda Deployment
+```bash
+npm run build:lambda
+```
+
+This uses the cross-platform Node.js build script that:
+- Compiles TypeScript to ES2022
+- Renames output to `index.mjs` for explicit ES module support
+- Copies dependencies and shared modules
+- Fixes import paths for Lambda deployment
+- Ensures proper ES module configuration
+
+See [ES_MODULES_SETUP.md](./ES_MODULES_SETUP.md) for details on the ES module configuration.
 
 ## Test
 
@@ -107,4 +121,15 @@ lambda_client.invoke(
 
 ## Next Steps
 
-Task 11.2 will wire this function to the Vector Store to index the generated embeddings in OpenSearch.
+This function is now fully integrated with the Vector Store (Task 11.2 complete). The document processing pipeline is:
+
+1. PDF Upload → S3
+2. Document Processor → Extract text and chunk
+3. Generate Embeddings → Create vectors (this function)
+4. OpenSearch → Index embeddings for search
+5. DynamoDB → Update document metadata
+
+Next tasks:
+- **Task 12**: Implement Upload Handler for document management
+- **Task 13**: Implement Query Router for RAG classification
+- **Task 14**: Implement RAG System for semantic search and retrieval

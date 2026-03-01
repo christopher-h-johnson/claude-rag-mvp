@@ -75,7 +75,8 @@ export class EmbeddingGenerator {
 
     constructor(config: EmbeddingConfig = {}) {
         const region = config.region || process.env.AWS_REGION || 'us-east-1';
-        this.modelId = config.modelId || 'amazon.titan-embed-text-v1';
+        // Use the correct Titan Embeddings V2 model ID
+        this.modelId = config.modelId || 'amazon.titan-embed-text-v2:0';
 
         this.client = new BedrockRuntimeClient({ region });
     }
@@ -84,7 +85,7 @@ export class EmbeddingGenerator {
      * Generate embedding for a single text input
      * 
      * @param text - The text to generate an embedding for
-     * @returns EmbeddingResult containing the 1536-dimension vector
+     * @returns EmbeddingResult containing the 1024-dimension vector (Titan V2)
      */
     async generateEmbedding(text: string): Promise<EmbeddingResult> {
         if (!text || text.trim().length === 0) {
@@ -116,8 +117,8 @@ export class EmbeddingGenerator {
                 throw new Error('Invalid response format: missing embedding array');
             }
 
-            if (responseBody.embedding.length !== 1536) {
-                throw new Error(`Invalid embedding dimensions: expected 1536, got ${responseBody.embedding.length}`);
+            if (responseBody.embedding.length !== 1024) {
+                throw new Error(`Invalid embedding dimensions: expected 1024, got ${responseBody.embedding.length}`);
             }
 
             return {
