@@ -1,6 +1,6 @@
 import { Client } from '@opensearch-project/opensearch';
 import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
-import * as AWS from 'aws-sdk';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
 
 /**
  * OpenSearch index configuration for document embeddings with k-NN search
@@ -103,10 +103,7 @@ function createOpenSearchClient(endpoint: string): Client {
         ...AwsSigv4Signer({
             region,
             service: 'es',
-            getCredentials: () => {
-                const credentials = new AWS.EnvironmentCredentials('AWS');
-                return Promise.resolve(credentials);
-            }
+            getCredentials: defaultProvider()
         }),
         node: `https://${endpoint}`
     });

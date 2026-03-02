@@ -2,7 +2,8 @@
     "name": "init-index",
     "version": "1.0.0",
     "description": "Lambda function to initialize OpenSearch index with k-NN configuration",
-    "main": "dist/index.js",
+    "type": "module",
+    "main": "dist/index.mjs",
     "scripts": {
         "build": "tsc",
         "build:terraform": "bash build-for-terraform.sh",
@@ -12,7 +13,7 @@
     },
     "dependencies": {
         "@opensearch-project/opensearch": "^2.12.0",
-        "aws-sdk": "^2.1540.0"
+        "@aws-sdk/credential-provider-node": "^3.0.0"
     },
     "devDependencies": {
         "@types/node": "^20.10.0",

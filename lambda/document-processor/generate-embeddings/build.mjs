@@ -88,17 +88,17 @@ let indexContent = readFileSync(indexMjsPath, 'utf-8');
 // Replace relative paths to shared modules with local paths
 indexContent = indexContent.replace(
     /from ['"]\.\.\/\.\.\/\.\.\/shared\/embeddings\/dist\/index\.js['"]/g,
-    "from './shared/embeddings/index.js'"
+    "from './shared/embeddings/index.mjs'"
 );
 
 indexContent = indexContent.replace(
     /from ['"]\.\.\/\.\.\/\.\.\/shared\/vector-store\/dist\/index\.js['"]/g,
-    "from './shared/vector-store/index.js'"
+    "from './shared/vector-store/index.mjs'"
 );
 
 indexContent = indexContent.replace(
     /from ['"]\.\.\/\.\.\/\.\.\/shared\/vector-store\/dist\/types\.js['"]/g,
-    "from './shared/vector-store/types.js'"
+    "from './shared/vector-store/types.mjs'"
 );
 
 writeFileSync(indexMjsPath, indexContent, 'utf-8');

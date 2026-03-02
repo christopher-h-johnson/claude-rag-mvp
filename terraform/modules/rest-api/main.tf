@@ -251,7 +251,13 @@ resource "aws_api_gateway_deployment" "chatbot" {
     aws_api_gateway_integration.login,
     aws_api_gateway_integration.logout,
     aws_api_gateway_integration.login_options,
-    aws_api_gateway_integration.logout_options
+    aws_api_gateway_integration.logout_options,
+    aws_api_gateway_integration.documents_list,
+    aws_api_gateway_integration.documents_upload,
+    aws_api_gateway_integration.documents_delete,
+    aws_api_gateway_integration.documents_options,
+    aws_api_gateway_integration.documents_upload_options,
+    aws_api_gateway_integration.documents_id_options
   ]
 
   lifecycle {
@@ -332,4 +338,247 @@ resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
 
 resource "aws_api_gateway_account" "main" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
+}
+
+# /documents Resource
+resource "aws_api_gateway_resource" "documents" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  parent_id   = aws_api_gateway_rest_api.chatbot.root_resource_id
+  path_part   = "documents"
+}
+
+# GET /documents Method
+resource "aws_api_gateway_method" "documents_list" {
+  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
+  resource_id   = aws_api_gateway_resource.documents.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda.id
+}
+
+# GET /documents Integration
+resource "aws_api_gateway_integration" "documents_list" {
+  rest_api_id             = aws_api_gateway_rest_api.chatbot.id
+  resource_id             = aws_api_gateway_resource.documents.id
+  http_method             = aws_api_gateway_method.documents_list.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.document_list_invoke_arn
+}
+
+# Lambda Permission for Document List
+resource "aws_lambda_permission" "document_list" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.document_list_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.chatbot.execution_arn}/*/*"
+}
+
+# POST /documents/upload Method
+resource "aws_api_gateway_resource" "documents_upload" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  parent_id   = aws_api_gateway_resource.documents.id
+  path_part   = "upload"
+}
+
+resource "aws_api_gateway_method" "documents_upload" {
+  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
+  resource_id   = aws_api_gateway_resource.documents_upload.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda.id
+}
+
+# POST /documents/upload Integration
+resource "aws_api_gateway_integration" "documents_upload" {
+  rest_api_id             = aws_api_gateway_rest_api.chatbot.id
+  resource_id             = aws_api_gateway_resource.documents_upload.id
+  http_method             = aws_api_gateway_method.documents_upload.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.document_upload_invoke_arn
+}
+
+# Lambda Permission for Document Upload
+resource "aws_lambda_permission" "document_upload" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.document_upload_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.chatbot.execution_arn}/*/*"
+}
+
+# CORS Configuration for /documents
+resource "aws_api_gateway_method" "documents_options" {
+  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
+  resource_id   = aws_api_gateway_resource.documents.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "documents_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents.id
+  http_method = aws_api_gateway_method.documents_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "documents_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents.id
+  http_method = aws_api_gateway_method.documents_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "documents_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents.id
+  http_method = aws_api_gateway_method.documents_options.http_method
+  status_code = aws_api_gateway_method_response.documents_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# CORS Configuration for /documents/upload
+resource "aws_api_gateway_method" "documents_upload_options" {
+  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
+  resource_id   = aws_api_gateway_resource.documents_upload.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "documents_upload_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents_upload.id
+  http_method = aws_api_gateway_method.documents_upload_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "documents_upload_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents_upload.id
+  http_method = aws_api_gateway_method.documents_upload_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "documents_upload_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents_upload.id
+  http_method = aws_api_gateway_method.documents_upload_options.http_method
+  status_code = aws_api_gateway_method_response.documents_upload_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# /documents/{documentId} Resource
+resource "aws_api_gateway_resource" "documents_id" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  parent_id   = aws_api_gateway_resource.documents.id
+  path_part   = "{documentId}"
+}
+
+# DELETE /documents/{documentId} Method
+resource "aws_api_gateway_method" "documents_delete" {
+  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
+  resource_id   = aws_api_gateway_resource.documents_id.id
+  http_method   = "DELETE"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda.id
+
+  request_parameters = {
+    "method.request.path.documentId" = true
+  }
+}
+
+# DELETE /documents/{documentId} Integration
+resource "aws_api_gateway_integration" "documents_delete" {
+  rest_api_id             = aws_api_gateway_rest_api.chatbot.id
+  resource_id             = aws_api_gateway_resource.documents_id.id
+  http_method             = aws_api_gateway_method.documents_delete.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.document_delete_invoke_arn
+}
+
+# Lambda Permission for Document Delete
+resource "aws_lambda_permission" "document_delete" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.document_delete_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.chatbot.execution_arn}/*/*"
+}
+
+# CORS Configuration for /documents/{documentId}
+resource "aws_api_gateway_method" "documents_id_options" {
+  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
+  resource_id   = aws_api_gateway_resource.documents_id.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "documents_id_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents_id.id
+  http_method = aws_api_gateway_method.documents_id_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "documents_id_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents_id.id
+  http_method = aws_api_gateway_method.documents_id_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "documents_id_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.documents_id.id
+  http_method = aws_api_gateway_method.documents_id_options.http_method
+  status_code = aws_api_gateway_method_response.documents_id_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
 }

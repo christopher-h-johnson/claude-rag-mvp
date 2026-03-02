@@ -315,10 +315,15 @@ All 9 tests passing.
 After deploying this module:
 
 1. ✅ OpenSearch index created with k-NN configuration
-2. → Implement Vector Store client wrapper (Task 9.2)
-3. → Implement Document Processor (Task 10)
-4. → Implement Embedding Generator (Task 11)
-5. → Wire components together for end-to-end flow
+2. ✅ Implement Vector Store client wrapper (Task 9.2)
+3. ✅ Implement Document Processor (Task 10)
+4. ✅ Implement Embedding Generator (Task 11)
+5. ✅ Wire components together for end-to-end flow (Task 11 - Document Processing Orchestration)
+6. → Implement Upload Handler (Task 12)
+7. → Implement Query Router (Task 13)
+8. → Implement RAG System (Task 14)
+9. → Implement Chat History Store (Task 15)
+10. → Implement main chat handler Lambda (Task 17)
 
 ## Conclusion
 

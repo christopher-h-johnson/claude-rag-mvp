@@ -7,6 +7,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "terraform-state-chatbot-177981160483"
+    key            = "chatbot/terraform.tfstate"
+    region         = "us-east-2"
+    encrypt        = true
+    dynamodb_table = "terraform-locks-dev"
+  }
 }
 
 provider "aws" {
@@ -156,13 +164,19 @@ module "websocket" {
 module "rest_api" {
   source = "./modules/rest-api"
 
-  environment             = var.environment
-  authorizer_function_arn = module.auth.authorizer_function_arn
-  authorizer_invoke_arn   = module.auth.authorizer_invoke_arn
-  login_function_name     = module.auth.login_function_name
-  login_invoke_arn        = module.auth.login_invoke_arn
-  logout_function_name    = module.auth.logout_function_name
-  logout_invoke_arn       = module.auth.logout_invoke_arn
+  environment                   = var.environment
+  authorizer_function_arn       = module.auth.authorizer_function_arn
+  authorizer_invoke_arn         = module.auth.authorizer_invoke_arn
+  login_function_name           = module.auth.login_function_name
+  login_invoke_arn              = module.auth.login_invoke_arn
+  logout_function_name          = module.auth.logout_function_name
+  logout_invoke_arn             = module.auth.logout_invoke_arn
+  document_upload_function_name = module.document_management.upload_function_name
+  document_upload_invoke_arn    = module.document_management.upload_invoke_arn
+  document_list_function_name   = module.document_management.list_function_name
+  document_list_invoke_arn      = module.document_management.list_invoke_arn
+  document_delete_function_name = module.document_management.delete_function_name
+  document_delete_invoke_arn    = module.document_management.delete_invoke_arn
 }
 
 module "opensearch_access_config" {
@@ -200,4 +214,20 @@ module "document_processor" {
   opensearch_index_name           = "documents"
   vpc_subnet_ids                  = module.networking.private_subnet_ids
   vpc_security_group_ids          = [module.security.lambda_security_group_id]
+}
+
+module "document_management" {
+  source = "./modules/document-management"
+
+  environment                  = var.environment
+  document_metadata_table_name = module.database.document_metadata_table_name
+  document_metadata_table_arn  = module.database.document_metadata_table_arn
+  documents_bucket_name        = module.storage.documents_bucket_name
+  documents_bucket_arn         = module.storage.documents_bucket_arn
+  kms_key_arn                  = module.security.kms_key_arn
+  opensearch_endpoint          = module.opensearch.endpoint
+  opensearch_index             = "documents"
+  opensearch_domain_arn        = module.opensearch.domain_arn
+  private_subnet_ids           = module.networking.private_subnet_ids
+  lambda_security_group_id     = module.security.lambda_security_group_id
 }

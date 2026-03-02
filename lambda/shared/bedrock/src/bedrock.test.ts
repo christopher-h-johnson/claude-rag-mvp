@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fc from 'fast-check';
 import { BedrockService, formatConversationContext } from './bedrock.js';
-import type { GenerationRequest } from './types.js';
+import type { GenerationRequest, ResponseChunk } from './types.js';
 
 // Mock AWS SDK
 vi.mock('@aws-sdk/client-bedrock-runtime', () => {

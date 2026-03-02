@@ -24,13 +24,17 @@ if [ ! -d "dist" ]; then
     exit 1
 fi
 
+# Rename .js files to .mjs for ES module compatibility
+echo "Renaming .js files to .mjs for ES modules..."
+find dist -name "*.js" -type f -exec sh -c 'mv "$1" "${1%.js}.mjs"' _ {} \;
+
 # Copy node_modules to dist for Lambda deployment
 echo "Copying node_modules to dist..."
 cp -r node_modules dist/
 
 # Verify required files exist
-if [ ! -f "dist/index.js" ]; then
-    echo "Error: dist/index.js not found"
+if [ ! -f "dist/index.mjs" ]; then
+    echo "Error: dist/index.mjs not found"
     exit 1
 fi
 

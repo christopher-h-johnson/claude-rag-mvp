@@ -2,6 +2,7 @@
     "name": "configure-opensearch-access",
     "version": "1.0.0",
     "description": "Lambda function to configure OpenSearch role mapping for IAM roles",
+    "type": "module",
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc",
