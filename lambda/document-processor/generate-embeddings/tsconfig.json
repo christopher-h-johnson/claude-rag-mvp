@@ -5,7 +5,7 @@
         "lib": [
             "ES2022"
         ],
-        "moduleResolution": "bundler",
+        "moduleResolution": "node",
         "outDir": "./dist",
         "rootDir": "./src",
         "strict": true,

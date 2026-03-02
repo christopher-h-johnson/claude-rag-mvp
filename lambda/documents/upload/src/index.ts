@@ -55,7 +55,7 @@ export const handler = async (
     try {
         // Extract userId from authorizer context
         const userId = event.requestContext?.authorizer?.userId || 'unknown';
-        
+
         if (userId === 'unknown') {
             return createResponse(401, { error: 'Unauthorized' });
         }

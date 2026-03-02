@@ -3,10 +3,11 @@
     "version": "1.0.0",
     "description": "OpenSearch client wrapper for vector storage and search operations",
     "type": "module",
-    "main": "dist/index.js",
+    "main": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "scripts": {
-        "build": "tsc",
+        "build": "node build.mjs",
+        "build:tsc": "tsc",
         "test": "vitest run",
         "test:watch": "vitest"
     },

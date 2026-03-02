@@ -4,7 +4,8 @@
     "description": "AWS Bedrock client wrapper for Claude 3 Sonnet",
     "main": "dist/index.mjs",
     "scripts": {
-        "build": "tsc",
+        "build": "node build.mjs",
+        "build:tsc": "tsc",
         "clean": "rm -rf dist",
         "test": "vitest --run"
     },

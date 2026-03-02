@@ -4,7 +4,8 @@
     "description": "Redis cache utility for Bedrock responses and search results",
     "main": "dist/index.mjs",
     "scripts": {
-        "build": "tsc",
+        "build": "node build.mjs",
+        "build:tsc": "tsc",
         "clean": "rm -rf dist",
         "test": "vitest --run"
     },
