@@ -305,7 +305,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 13. Implement Query Router
-  - [ ] 13.1 Create query classification module
+  - [x] 13.1 Create query classification module
     - Implement heuristic rules for RAG vs direct LLM classification
     - Check for question patterns (who, what, where, when, why, how)
     - Check for document-related keywords (document, file, PDF, page)
@@ -313,13 +313,13 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Return requiresRetrieval boolean with confidence score
     - _Requirements: 7.5_
   
-  - [ ] 13.2 Implement fallback classification with Claude
+  - [x] 13.2 Implement fallback classification with Claude
     - For ambiguous queries (confidence < 0.7), use Claude for classification
     - Send classification prompt to Bedrock
     - Parse response to determine retrieval need
     - _Requirements: 7.5_
   
-  - [ ] 13.3 Implement dynamic k selection
+  - [x] 13.3 Implement dynamic k selection
     - Determine number of chunks to retrieve based on query complexity
     - Default k=5, increase to k=10 for complex queries
     - _Requirements: 7.5_
