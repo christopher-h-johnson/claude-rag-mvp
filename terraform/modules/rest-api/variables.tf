@@ -32,3 +32,33 @@ variable "logout_invoke_arn" {
   description = "Invoke ARN of the Logout Lambda function"
   type        = string
 }
+
+variable "document_upload_function_name" {
+  description = "Name of the Document Upload Lambda function"
+  type        = string
+}
+
+variable "document_upload_invoke_arn" {
+  description = "Invoke ARN of the Document Upload Lambda function"
+  type        = string
+}
+
+variable "document_list_function_name" {
+  description = "Name of the Document List Lambda function"
+  type        = string
+}
+
+variable "document_list_invoke_arn" {
+  description = "Invoke ARN of the Document List Lambda function"
+  type        = string
+}
+
+variable "document_delete_function_name" {
+  description = "Name of the Document Delete Lambda function"
+  type        = string
+}
+
+variable "document_delete_invoke_arn" {
+  description = "Invoke ARN of the Document Delete Lambda function"
+  type        = string
+}

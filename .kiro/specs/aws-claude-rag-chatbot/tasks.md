@@ -273,7 +273,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 12. Implement Upload Handler
-  - [ ] 12.1 Create document upload endpoint Lambda
+  - [x] 12.1 Create document upload endpoint Lambda
     - Implement POST /documents/upload handler
     - Validate request: filename, fileSize (max 100MB), contentType (application/pdf)
     - Generate unique documentId (UUID)
@@ -282,14 +282,14 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Return uploadUrl, documentId, expiresAt
     - _Requirements: 4.1, 4.2_
   
-  - [ ] 12.2 Create document list endpoint Lambda
+  - [x] 12.2 Create document list endpoint Lambda
     - Implement GET /documents handler
     - Query DocumentMetadata table by uploadedBy (GSI)
     - Return paginated list with documentId, filename, uploadedAt, pageCount, status
     - Support nextToken for pagination
     - _Requirements: 4.1_
   
-  - [ ] 12.3 Create document delete endpoint Lambda
+  - [x] 12.3 Create document delete endpoint Lambda
     - Implement DELETE /documents/{documentId} handler
     - Delete document from S3 uploads/ and processed/ folders
     - Delete embeddings from OpenSearch by documentId
