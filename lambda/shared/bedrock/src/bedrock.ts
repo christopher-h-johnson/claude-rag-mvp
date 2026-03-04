@@ -1,7 +1,7 @@
 /**
- * Bedrock Service - Claude 3 Sonnet Client Wrapper
+ * Bedrock Service - Claude Haiku 4.5 Client Wrapper
  * 
- * Provides streaming and non-streaming interfaces to Claude 3 Sonnet via Amazon Bedrock.
+ * Provides streaming and non-streaming interfaces to Claude Haiku 4.5 via Amazon Bedrock.
  * Implements requirements 3.1 and 3.2 from the design specification.
  */
 
@@ -41,7 +41,7 @@ export class BedrockService {
     }
 
     /**
-     * Generate streaming response from Claude 3 Sonnet
+     * Generate streaming response from Claude Haiku 4.5
      * Yields response chunks as they arrive from Bedrock
      * Implements retry logic with exponential backoff for throttling errors
      */
@@ -100,7 +100,7 @@ export class BedrockService {
     }
 
     /**
-     * Generate non-streaming response from Claude 3 Sonnet
+     * Generate non-streaming response from Claude Haiku 4.5
      * Returns complete response as a single string
      * Implements retry logic with exponential backoff for throttling errors
      */
@@ -136,7 +136,7 @@ export class BedrockService {
     }
 
     /**
-     * Build the request payload for Claude 3 Sonnet
+     * Build the request payload for Claude Haiku 4.5
      * Formats conversation history and system prompt according to Bedrock API spec
      */
     private buildRequestPayload(request: GenerationRequest): Record<string, any> {
