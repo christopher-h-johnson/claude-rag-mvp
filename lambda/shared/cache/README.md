@@ -57,7 +57,7 @@ if (cachedResponse) {
 
 ```typescript
 // Check cache before searching OpenSearch
-const queryEmbedding = [0.1, 0.2, 0.3, ...]; // 1536 dimensions
+const queryEmbedding = [0.1, 0.2, 0.3, ...]; // 1024 dimensions
 const cachedResults = await cache.getCachedSearchResults(queryEmbedding);
 
 if (cachedResults) {

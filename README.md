@@ -334,8 +334,8 @@ Integration       ░░░░░░░░░░░░░░░░░░░░  
 - Unit tests for streaming, error handling, and context formatting
 
 #### **Embedding Generator with Bedrock Titan** (Task 8) ✓
-- Titan Embeddings client (amazon.titan-embed-text-v1)
-- Single text embedding generation (1536 dimensions)
+- Titan Embeddings client (amazon.titan-embed-text-v2:0)
+- Single text embedding generation (1024 dimensions)
 - Batch processing with batch size of 25
 - Parallel batch processing using Promise.all
 - Rate limiting with retry logic
@@ -343,7 +343,7 @@ Integration       ░░░░░░░░░░░░░░░░░░░░  
 - Unit tests for embedding generation and batch processing
 
 #### **Vector Store with OpenSearch** (Task 9) ✓
-- OpenSearch index with k-NN configuration (1536 dimensions, cosine similarity)
+- OpenSearch index with k-NN configuration (1024 dimensions, cosine similarity)
 - HNSW parameters: ef_construction=512, m=16, ef_search=512
 - 5-second refresh interval for near-real-time search
 - OpenSearch client wrapper with VPC endpoint

@@ -123,7 +123,7 @@ aws lambda invoke --function-name $FUNCTION_NAME --payload '{}' response.json
 - [ ] Index name: `documents`
 - [ ] Field `embedding` exists
 - [ ] Field `embedding` type: `knn_vector`
-- [ ] Field `embedding` dimension: 1536
+- [ ] Field `embedding` dimension: 1024
 - [ ] Field `embedding` method: `hnsw`
 - [ ] Field `embedding` space_type: `cosinesimil`
 - [ ] HNSW ef_construction: 512

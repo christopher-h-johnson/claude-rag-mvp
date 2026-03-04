@@ -147,7 +147,7 @@ aws opensearch describe-domain --domain-name <your-domain-name>
 4. Verify the index mapping includes the k-NN configuration
 
 Expected response should show:
-- 1536-dimension knn_vector field
+- 1024-dimension knn_vector field
 - HNSW algorithm configuration
 - All metadata fields (chunkId, documentId, etc.)
 

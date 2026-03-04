@@ -10,7 +10,7 @@ Creates the OpenSearch `documents` index with k-NN configuration.
 **Location:** `lambda/vector-store/init-index/`
 
 **Purpose:**
-- Creates index with 1536-dimension vector field
+- Creates index with 1024-dimension vector field
 - Configures HNSW algorithm for k-NN search
 - Sets up metadata fields for document tracking
 

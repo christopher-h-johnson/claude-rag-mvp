@@ -51,16 +51,14 @@ Titan Embeddings V2 offers:
 
 ### Default Configuration
 
-By default, V2 uses **1024 dimensions** (not 1536 like V1). If you need 1536 dimensions, you may need to:
-1. Use V1 if available in your region
-2. Or adjust your vector store configuration to use 1024 dimensions
+By default, V2 uses **1024 dimensions** (matching our vector store configuration). V1 used 1536 dimensions but is legacy.
 
 ## Dimension Compatibility
 
 ### Current Setup
-- **Vector Store**: Configured for 1536 dimensions
-- **Titan V1**: Outputs 1536 dimensions ✅
-- **Titan V2**: Outputs 1024 dimensions by default ⚠️
+- **Vector Store**: Configured for 1024 dimensions
+- **Titan V1**: Outputs 1536 dimensions (legacy)
+- **Titan V2**: Outputs 1024 dimensions by default ✅
 
 ### Options
 
@@ -93,8 +91,8 @@ const requestBody = {
 };
 ```
 
-#### Option 3: Use Titan V1 if available
-Keep using V1 if it's available in your region and you need 1536 dimensions.
+#### Option 3: Use Titan V1 if available (Not Recommended)
+Keep using V1 if it's available in your region, but note it outputs 1536 dimensions which doesn't match our 1024-dimension vector store.
 
 ## Steps Taken
 

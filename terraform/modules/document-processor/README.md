@@ -16,9 +16,9 @@ This module includes two Lambda functions:
 - Handles failures by moving documents to S3 failed/ folder
 
 ### 2. Generate Embeddings Lambda (TypeScript)
-- Generates vector embeddings using Amazon Bedrock Titan Embeddings
+- Generates vector embeddings using Amazon Bedrock Titan Embeddings V2
 - Processes chunks in batches of 25 for optimal throughput
-- Creates 1536-dimension embeddings for semantic search
+- Creates 1024-dimension embeddings for semantic search
 - Includes retry logic with exponential backoff
 - Preserves chunk metadata (page numbers, document info)
 

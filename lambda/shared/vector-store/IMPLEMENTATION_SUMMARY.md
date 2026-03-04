@@ -38,7 +38,7 @@ Successfully implemented a complete OpenSearch client wrapper for vector storage
 ```typescript
 async indexEmbedding(embedding: Embedding): Promise<void>
 ```
-- Indexes a single document chunk with 1536-dimension vector
+- Indexes a single document chunk with 1024-dimension vector
 - Stores text content and metadata (document ID, name, page, chunk index)
 - Handles errors with descriptive messages
 - Uses default "system" for uploadedBy if not provided
@@ -61,7 +61,7 @@ async searchSimilar(
 ): Promise<SearchResult[]>
 ```
 - Performs k-NN search using OpenSearch's HNSW algorithm
-- Validates query vector dimensions (must be 1536)
+- Validates query vector dimensions (must be 1024)
 - Supports optional filtering:
   - Document IDs (terms query)
   - Date ranges (range query on uploadedAt)
@@ -82,7 +82,7 @@ async deleteDocument(documentId: string): Promise<void>
 
 **OpenSearch Configuration:**
 - Index: `documents` (configurable)
-- Vector dimensions: 1536 (Titan Embeddings compatible)
+- Vector dimensions: 1024 (Titan Embeddings V2 compatible)
 - Similarity metric: Cosine similarity
 - Algorithm: HNSW (Hierarchical Navigable Small World)
 - HNSW parameters:
@@ -184,7 +184,7 @@ const vectorStore = new OpenSearchVectorStore(
 // Index embedding
 const embedding: Embedding = {
     chunkId: 'chunk-1',
-    vector: new Array(1536).fill(0.1),
+    vector: new Array(1024).fill(0.1),
     text: 'Document text',
     metadata: {
         documentId: 'doc-1',
@@ -197,7 +197,7 @@ const embedding: Embedding = {
 await vectorStore.indexEmbedding(embedding);
 
 // Search
-const queryVector = new Array(1536).fill(0.5);
+const queryVector = new Array(1024).fill(0.5);
 const results = await vectorStore.searchSimilar(queryVector, 5);
 
 // Search with filters

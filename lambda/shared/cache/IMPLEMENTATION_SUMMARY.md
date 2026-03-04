@@ -72,7 +72,7 @@ interface CacheConfig {
 - TTL: 3600s
 
 **Search Results:**
-- Input: Embedding vector (1536 dimensions)
+- Input: Embedding vector (1024 dimensions)
 - Serialization: Join array with commas
 - Hash: SHA-256(serialized_embedding)
 - Key: `search:<hash>`

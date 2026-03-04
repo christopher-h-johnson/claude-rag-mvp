@@ -61,7 +61,7 @@ def invoke_embedding_generator(bucket: str, document_id: str, chunks_key: str) -
 - Returns embeddings with metadata
 
 **Key Features:**
-- Uses Amazon Bedrock Titan Embeddings (1536 dimensions)
+- Uses Amazon Bedrock Titan Embeddings V2 (1024 dimensions)
 - Batch processing with retry logic
 - Preserves chunk metadata (page numbers, document info)
 - Asynchronous invocation for non-blocking processing

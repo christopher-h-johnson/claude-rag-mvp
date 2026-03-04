@@ -100,7 +100,7 @@ Expected response:
 The Lambda function creates an OpenSearch index with the following configuration:
 
 ### Vector Settings
-- **Dimensions**: 1536 (matches Amazon Bedrock Titan Embeddings)
+- **Dimensions**: 1024 (matches Amazon Bedrock Titan Embeddings V2)
 - **Algorithm**: HNSW (Hierarchical Navigable Small World)
 - **Engine**: Lucene (native OpenSearch 3.0+ engine)
 - **Similarity Metric**: Cosine similarity
@@ -120,7 +120,7 @@ The Lambda function creates an OpenSearch index with the following configuration
 - `pageNumber` (integer) - Page number in source document
 - `chunkIndex` (integer) - Sequential chunk number
 - `text` (text) - Actual text content
-- `embedding` (knn_vector) - 1536-dimension vector
+- `embedding` (knn_vector) - 1024-dimension vector
 - `uploadedAt` (date) - Upload timestamp
 - `uploadedBy` (keyword) - Uploader user ID
 

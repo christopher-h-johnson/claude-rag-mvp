@@ -15,7 +15,7 @@ Implemented a Lambda function to initialize the OpenSearch index with k-NN (k-Ne
    - Implements idempotent operation (checks if index exists before creating)
 
 2. **Configuration Details**
-   - **Vector Dimensions**: 1536 (matches Amazon Bedrock Titan Embeddings)
+   - **Vector Dimensions**: 1024 (matches Amazon Bedrock Titan Embeddings V2)
    - **Similarity Metric**: Cosine similarity
    - **Algorithm**: HNSW (Hierarchical Navigable Small World)
    - **HNSW Parameters**:
@@ -34,7 +34,7 @@ Implemented a Lambda function to initialize the OpenSearch index with k-NN (k-Ne
    - `pageNumber` (integer) - Page in source document
    - `chunkIndex` (integer) - Sequential chunk number
    - `text` (text) - Actual text content
-   - `embedding` (knn_vector) - 1536-dimension vector
+   - `embedding` (knn_vector) - 1024-dimension vector
    - `uploadedAt` (date) - Upload timestamp
    - `uploadedBy` (keyword) - Uploader user ID
 
@@ -67,7 +67,7 @@ Comprehensive unit tests covering:
 
 ✅ **Requirement 7.3**: Vector Store supports approximate nearest neighbor search
 - HNSW algorithm configured for efficient k-NN search
-- 1536 dimensions for Titan Embeddings compatibility
+- 1024 dimensions for Titan Embeddings V2 compatibility
 - Cosine similarity metric for semantic search
 - Optimized parameters for production workloads
 

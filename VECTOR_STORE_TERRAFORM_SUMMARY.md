@@ -216,7 +216,7 @@ cat response.json
 
 ### Index Configuration
 - **Name**: documents
-- **Dimensions**: 1536 (Titan Embeddings)
+- **Dimensions**: 1024 (Titan Embeddings V2)
 - **Algorithm**: HNSW
 - **Similarity**: Cosine
 - **Parameters**: ef_construction=512, m=16, ef_search=512
@@ -260,7 +260,7 @@ terraform/modules/vector-store-init/
 ## Requirements Satisfied
 
 ✅ **Task 9.1**: Create OpenSearch index with k-NN configuration
-- Index mapping with knn_vector field (1536 dimensions, cosinesimil)
+- Index mapping with knn_vector field (1024 dimensions, cosinesimil)
 - HNSW parameters configured (ef_construction=512, m=16, ef_search=512)
 - Refresh interval set to 5s
 - Proper metadata field types

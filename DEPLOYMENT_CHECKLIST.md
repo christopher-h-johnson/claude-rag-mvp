@@ -16,6 +16,7 @@ The following code changes have been made to fix Bedrock model configuration and
 
 3. **OpenSearch Client** (`lambda/shared/vector-store/src/opensearch-client.ts`)
    - Fixed k-NN query structure to use correct format: `{ query: { knn: { embedding: { vector: [...], k: N } } } }`
+   - Validates query vector is 1024 dimensions
 
 4. **IAM Permissions** (`terraform/modules/websocket-handlers/main.tf`)
    - Already includes inference profile permissions: `arn:aws:bedrock:*:*:inference-profile/*`

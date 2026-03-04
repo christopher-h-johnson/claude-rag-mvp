@@ -131,7 +131,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [x] 7. Implement Bedrock Service integration
-  - [x] 7.1 Create Bedrock client wrapper for Claude 3 Sonnet
+  - [x] 7.1 Create Bedrock client wrapper for Claude Haiku 4.5 
     - Initialize AWS SDK Bedrock Runtime client
     - Implement generateResponse with streaming support (InvokeModelWithResponseStream)
     - Implement generateResponseSync for non-streaming requests

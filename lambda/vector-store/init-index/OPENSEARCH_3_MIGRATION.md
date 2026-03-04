@@ -20,7 +20,7 @@ Changed the k-NN engine from `nmslib` to `lucene` in the index configuration.
 ```typescript
 embedding: {
     type: 'knn_vector',
-    dimension: 1536,
+    dimension: 1024,
     method: {
         name: 'hnsw',
         space_type: 'cosinesimil',
@@ -37,7 +37,7 @@ embedding: {
 ```typescript
 embedding: {
     type: 'knn_vector',
-    dimension: 1536,
+    dimension: 1024,
     method: {
         name: 'hnsw',
         space_type: 'cosinesimil',
@@ -88,7 +88,7 @@ POST /documents_v2
     "properties": {
       "embedding": {
         "type": "knn_vector",
-        "dimension": 1536,
+        "dimension": 1024,
         "method": {
           "name": "hnsw",
           "space_type": "cosinesimil",

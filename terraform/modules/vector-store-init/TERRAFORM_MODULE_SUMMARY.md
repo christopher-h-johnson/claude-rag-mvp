@@ -279,7 +279,7 @@ After deploying this module:
 ## Requirements Satisfied
 
 ✅ **Task 9.1**: Create OpenSearch index with k-NN configuration
-- Index mapping with knn_vector field (1536 dimensions, cosinesimil)
+- Index mapping with knn_vector field (1024 dimensions, cosinesimil)
 - HNSW parameters: ef_construction=512, m=16, ef_search=512
 - Refresh interval: 5s
 - Proper metadata field types
