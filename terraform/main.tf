@@ -187,6 +187,8 @@ module "rest_api" {
   document_list_invoke_arn      = module.document_management.list_invoke_arn
   document_delete_function_name = module.document_management.delete_function_name
   document_delete_invoke_arn    = module.document_management.delete_invoke_arn
+  chat_history_function_name    = module.chat_history.lambda_function_name
+  chat_history_invoke_arn       = module.chat_history.lambda_invoke_arn
 }
 
 module "opensearch_access_config" {
@@ -240,4 +242,14 @@ module "document_management" {
   opensearch_domain_arn        = module.opensearch.domain_arn
   private_subnet_ids           = module.networking.private_subnet_ids
   lambda_security_group_id     = module.security.lambda_security_group_id
+}
+
+module "chat_history" {
+  source = "./modules/chat-history"
+
+  environment             = var.environment
+  chat_history_table_name = module.database.chat_history_table_name
+  chat_history_table_arn  = module.database.chat_history_table_arn
+  kms_key_arn             = module.security.kms_key_arn
+  kms_key_id              = module.security.kms_key_id
 }

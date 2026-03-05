@@ -26,6 +26,150 @@ resource "aws_cloudwatch_log_group" "api_logs" {
   }
 }
 
+# Request/Response Models
+resource "aws_api_gateway_model" "login_request" {
+  rest_api_id  = aws_api_gateway_rest_api.chatbot.id
+  name         = "LoginRequest"
+  description  = "Login request model"
+  content_type = "application/json"
+
+  schema = jsonencode({
+    "$schema" = "http://json-schema.org/draft-04/schema#"
+    title     = "LoginRequest"
+    type      = "object"
+    required  = ["username", "password"]
+    properties = {
+      username = {
+        type = "string"
+      }
+      password = {
+        type = "string"
+      }
+    }
+  })
+}
+
+resource "aws_api_gateway_model" "login_response" {
+  rest_api_id  = aws_api_gateway_rest_api.chatbot.id
+  name         = "LoginResponse"
+  description  = "Login response model"
+  content_type = "application/json"
+
+  schema = jsonencode({
+    "$schema" = "http://json-schema.org/draft-04/schema#"
+    title     = "LoginResponse"
+    type      = "object"
+    required  = ["token", "expiresAt", "userId"]
+    properties = {
+      token = {
+        type = "string"
+      }
+      expiresAt = {
+        type = "number"
+      }
+      userId = {
+        type = "string"
+      }
+    }
+  })
+}
+
+resource "aws_api_gateway_model" "upload_request" {
+  rest_api_id  = aws_api_gateway_rest_api.chatbot.id
+  name         = "UploadRequest"
+  description  = "Document upload request model"
+  content_type = "application/json"
+
+  schema = jsonencode({
+    "$schema" = "http://json-schema.org/draft-04/schema#"
+    title     = "UploadRequest"
+    type      = "object"
+    required  = ["filename", "fileSize", "contentType"]
+    properties = {
+      filename = {
+        type = "string"
+      }
+      fileSize = {
+        type    = "number"
+        maximum = 104857600
+      }
+      contentType = {
+        type = "string"
+        enum = ["application/pdf"]
+      }
+    }
+  })
+}
+
+resource "aws_api_gateway_model" "upload_response" {
+  rest_api_id  = aws_api_gateway_rest_api.chatbot.id
+  name         = "UploadResponse"
+  description  = "Document upload response model"
+  content_type = "application/json"
+
+  schema = jsonencode({
+    "$schema" = "http://json-schema.org/draft-04/schema#"
+    title     = "UploadResponse"
+    type      = "object"
+    required  = ["uploadUrl", "documentId", "expiresAt"]
+    properties = {
+      uploadUrl = {
+        type = "string"
+      }
+      documentId = {
+        type = "string"
+      }
+      expiresAt = {
+        type = "number"
+      }
+    }
+  })
+}
+
+resource "aws_api_gateway_model" "error_response" {
+  rest_api_id  = aws_api_gateway_rest_api.chatbot.id
+  name         = "ErrorResponse"
+  description  = "Error response model"
+  content_type = "application/json"
+
+  schema = jsonencode({
+    "$schema" = "http://json-schema.org/draft-04/schema#"
+    title     = "ErrorResponse"
+    type      = "object"
+    required  = ["message"]
+    properties = {
+      message = {
+        type = "string"
+      }
+      code = {
+        type = "string"
+      }
+    }
+  })
+}
+
+# Request Validators
+resource "aws_api_gateway_request_validator" "body_validator" {
+  name                        = "${var.environment}-body-validator"
+  rest_api_id                 = aws_api_gateway_rest_api.chatbot.id
+  validate_request_body       = true
+  validate_request_parameters = false
+}
+
+resource "aws_api_gateway_request_validator" "params_validator" {
+  name                        = "${var.environment}-params-validator"
+  rest_api_id                 = aws_api_gateway_rest_api.chatbot.id
+  validate_request_body       = false
+  validate_request_parameters = true
+}
+
+resource "aws_api_gateway_request_validator" "all_validator" {
+  name                        = "${var.environment}-all-validator"
+  rest_api_id                 = aws_api_gateway_rest_api.chatbot.id
+  validate_request_body       = true
+  validate_request_parameters = true
+}
+
 # Lambda Authorizer
 resource "aws_api_gateway_authorizer" "lambda" {
   name                             = "${var.environment}-lambda-authorizer"
@@ -93,10 +237,15 @@ resource "aws_api_gateway_resource" "login" {
 
 # POST /auth/login Method
 resource "aws_api_gateway_method" "login" {
-  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
-  resource_id   = aws_api_gateway_resource.login.id
-  http_method   = "POST"
-  authorization = "NONE"
+  rest_api_id          = aws_api_gateway_rest_api.chatbot.id
+  resource_id          = aws_api_gateway_resource.login.id
+  http_method          = "POST"
+  authorization        = "NONE"
+  request_validator_id = aws_api_gateway_request_validator.body_validator.id
+
+  request_models = {
+    "application/json" = aws_api_gateway_model.login_request.name
+  }
 }
 
 # POST /auth/login Integration
@@ -257,7 +406,9 @@ resource "aws_api_gateway_deployment" "chatbot" {
     aws_api_gateway_integration.documents_delete,
     aws_api_gateway_integration.documents_options,
     aws_api_gateway_integration.documents_upload_options,
-    aws_api_gateway_integration.documents_id_options
+    aws_api_gateway_integration.documents_id_options,
+    aws_api_gateway_integration.chat_history,
+    aws_api_gateway_integration.chat_history_options
   ]
 
   lifecycle {
@@ -271,19 +422,26 @@ resource "aws_api_gateway_stage" "chatbot" {
   rest_api_id   = aws_api_gateway_rest_api.chatbot.id
   stage_name    = var.environment
 
+  # Access logs for audit trail (Requirement 11.1)
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_logs.arn
     format = jsonencode({
-      requestId      = "$context.requestId"
-      ip             = "$context.identity.sourceIp"
-      caller         = "$context.identity.caller"
-      user           = "$context.identity.user"
-      requestTime    = "$context.requestTime"
-      httpMethod     = "$context.httpMethod"
-      resourcePath   = "$context.resourcePath"
-      status         = "$context.status"
-      protocol       = "$context.protocol"
-      responseLength = "$context.responseLength"
+      requestId               = "$context.requestId"
+      ip                      = "$context.identity.sourceIp"
+      caller                  = "$context.identity.caller"
+      user                    = "$context.identity.user"
+      requestTime             = "$context.requestTime"
+      httpMethod              = "$context.httpMethod"
+      resourcePath            = "$context.resourcePath"
+      status                  = "$context.status"
+      protocol                = "$context.protocol"
+      responseLength          = "$context.responseLength"
+      integrationLatency      = "$context.integration.latency"
+      responseLatency         = "$context.responseLatency"
+      errorMessage            = "$context.error.message"
+      errorMessageString      = "$context.error.messageString"
+      authorizerError         = "$context.authorizer.error"
+      integrationErrorMessage = "$context.integrationErrorMessage"
     })
   }
 
@@ -293,7 +451,7 @@ resource "aws_api_gateway_stage" "chatbot" {
   }
 }
 
-# API Gateway Method Settings (Throttling)
+# API Gateway Method Settings (Throttling and Logging)
 resource "aws_api_gateway_method_settings" "chatbot" {
   rest_api_id = aws_api_gateway_rest_api.chatbot.id
   stage_name  = aws_api_gateway_stage.chatbot.stage_name
@@ -302,10 +460,13 @@ resource "aws_api_gateway_method_settings" "chatbot" {
   settings {
     throttling_burst_limit = 100
     throttling_rate_limit  = 50
-    logging_level          = "INFO"
-    data_trace_enabled     = true
-    metrics_enabled        = true
+    # Enable full request/response logging for audit trail (Requirement 11.1)
+    logging_level      = "INFO"
+    data_trace_enabled = true
+    metrics_enabled    = true
   }
+
+  depends_on = [aws_api_gateway_account.main]
 }
 
 # API Gateway CloudWatch Logs Role (Account-level setting)
@@ -338,6 +499,232 @@ resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
 
 resource "aws_api_gateway_account" "main" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
+}
+
+# AWS WAF Web ACL
+resource "aws_wafv2_web_acl" "api_gateway" {
+  count = var.enable_waf ? 1 : 0
+
+  name  = "${var.environment}-chatbot-api-waf"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  # IP Blocklist Rule (if configured)
+  dynamic "rule" {
+    for_each = length(var.waf_ip_blocklist) > 0 ? [1] : []
+    content {
+      name     = "IPBlocklistRule"
+      priority = 0
+
+      action {
+        block {}
+      }
+
+      statement {
+        ip_set_reference_statement {
+          arn = aws_wafv2_ip_set.blocklist[0].arn
+        }
+      }
+
+      visibility_config {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "${var.environment}-ip-blocklist-rule"
+        sampled_requests_enabled   = true
+      }
+    }
+  }
+
+  # Rate-based rule to prevent abuse
+  rule {
+    name     = "RateLimitRule"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = var.waf_rate_limit
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.environment}-rate-limit-rule"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # AWS Managed Rules - Core Rule Set
+  rule {
+    name     = "AWSManagedRulesCommonRuleSet"
+    priority = 2
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesCommonRuleSet"
+
+        # Exclude rules that might cause false positives
+        rule_action_override {
+          name = "SizeRestrictions_BODY"
+          action_to_use {
+            count {}
+          }
+        }
+
+        rule_action_override {
+          name = "GenericRFI_BODY"
+          action_to_use {
+            count {}
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.environment}-aws-common-rules"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # AWS Managed Rules - Known Bad Inputs
+  rule {
+    name     = "AWSManagedRulesKnownBadInputsRuleSet"
+    priority = 3
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.environment}-known-bad-inputs"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # AWS Managed Rules - SQL Injection
+  rule {
+    name     = "AWSManagedRulesSQLiRuleSet"
+    priority = 4
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesSQLiRuleSet"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.environment}-sqli-rules"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.environment}-chatbot-api-waf"
+    sampled_requests_enabled   = true
+  }
+
+  tags = {
+    Name        = "${var.environment}-chatbot-api-waf"
+    Environment = var.environment
+  }
+}
+
+# IP Set for Blocklist
+resource "aws_wafv2_ip_set" "blocklist" {
+  count = var.enable_waf && length(var.waf_ip_blocklist) > 0 ? 1 : 0
+
+  name               = "${var.environment}-ip-blocklist"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = var.waf_ip_blocklist
+
+  tags = {
+    Name        = "${var.environment}-ip-blocklist"
+    Environment = var.environment
+  }
+}
+
+# IP Set for Allowlist (optional - for future use)
+resource "aws_wafv2_ip_set" "allowlist" {
+  count = var.enable_waf && length(var.waf_ip_allowlist) > 0 ? 1 : 0
+
+  name               = "${var.environment}-ip-allowlist"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = var.waf_ip_allowlist
+
+  tags = {
+    Name        = "${var.environment}-ip-allowlist"
+    Environment = var.environment
+  }
+}
+
+# Associate WAF with API Gateway Stage
+resource "aws_wafv2_web_acl_association" "api_gateway" {
+  count = var.enable_waf ? 1 : 0
+
+  resource_arn = aws_api_gateway_stage.chatbot.arn
+  web_acl_arn  = aws_wafv2_web_acl.api_gateway[0].arn
+}
+
+# CloudWatch Log Group for WAF
+resource "aws_cloudwatch_log_group" "waf_logs" {
+  count = var.enable_waf ? 1 : 0
+
+  name              = "aws-waf-logs-${var.environment}-chatbot-api"
+  retention_in_days = 365
+
+  tags = {
+    Name        = "${var.environment}-waf-logs"
+    Environment = var.environment
+  }
+}
+
+# WAF Logging Configuration
+resource "aws_wafv2_web_acl_logging_configuration" "api_gateway" {
+  count = var.enable_waf ? 1 : 0
+
+  resource_arn            = aws_wafv2_web_acl.api_gateway[0].arn
+  log_destination_configs = [aws_cloudwatch_log_group.waf_logs[0].arn]
+
+  redacted_fields {
+    single_header {
+      name = "authorization"
+    }
+  }
+
+  redacted_fields {
+    single_header {
+      name = "cookie"
+    }
+  }
 }
 
 # /documents Resource
@@ -383,11 +770,16 @@ resource "aws_api_gateway_resource" "documents_upload" {
 }
 
 resource "aws_api_gateway_method" "documents_upload" {
-  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
-  resource_id   = aws_api_gateway_resource.documents_upload.id
-  http_method   = "POST"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.lambda.id
+  rest_api_id          = aws_api_gateway_rest_api.chatbot.id
+  resource_id          = aws_api_gateway_resource.documents_upload.id
+  http_method          = "POST"
+  authorization        = "CUSTOM"
+  authorizer_id        = aws_api_gateway_authorizer.lambda.id
+  request_validator_id = aws_api_gateway_request_validator.body_validator.id
+
+  request_models = {
+    "application/json" = aws_api_gateway_model.upload_request.name
+  }
 }
 
 # POST /documents/upload Integration
@@ -508,11 +900,12 @@ resource "aws_api_gateway_resource" "documents_id" {
 
 # DELETE /documents/{documentId} Method
 resource "aws_api_gateway_method" "documents_delete" {
-  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
-  resource_id   = aws_api_gateway_resource.documents_id.id
-  http_method   = "DELETE"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.lambda.id
+  rest_api_id          = aws_api_gateway_rest_api.chatbot.id
+  resource_id          = aws_api_gateway_resource.documents_id.id
+  http_method          = "DELETE"
+  authorization        = "CUSTOM"
+  authorizer_id        = aws_api_gateway_authorizer.lambda.id
+  request_validator_id = aws_api_gateway_request_validator.params_validator.id
 
   request_parameters = {
     "method.request.path.documentId" = true
@@ -579,6 +972,100 @@ resource "aws_api_gateway_integration_response" "documents_id_options" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# /chat Resource
+resource "aws_api_gateway_resource" "chat" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  parent_id   = aws_api_gateway_rest_api.chatbot.root_resource_id
+  path_part   = "chat"
+}
+
+# /chat/history Resource
+resource "aws_api_gateway_resource" "chat_history" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  parent_id   = aws_api_gateway_resource.chat.id
+  path_part   = "history"
+}
+
+# GET /chat/history Method
+resource "aws_api_gateway_method" "chat_history" {
+  rest_api_id          = aws_api_gateway_rest_api.chatbot.id
+  resource_id          = aws_api_gateway_resource.chat_history.id
+  http_method          = "GET"
+  authorization        = "CUSTOM"
+  authorizer_id        = aws_api_gateway_authorizer.lambda.id
+  request_validator_id = aws_api_gateway_request_validator.params_validator.id
+
+  request_parameters = {
+    "method.request.querystring.sessionId" = true
+    "method.request.querystring.limit"     = false
+    "method.request.querystring.nextToken" = false
+  }
+}
+
+# GET /chat/history Integration
+resource "aws_api_gateway_integration" "chat_history" {
+  rest_api_id             = aws_api_gateway_rest_api.chatbot.id
+  resource_id             = aws_api_gateway_resource.chat_history.id
+  http_method             = aws_api_gateway_method.chat_history.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.chat_history_invoke_arn
+}
+
+# Lambda Permission for Chat History
+resource "aws_lambda_permission" "chat_history" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.chat_history_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.chatbot.execution_arn}/*/*"
+}
+
+# CORS Configuration for /chat/history
+resource "aws_api_gateway_method" "chat_history_options" {
+  rest_api_id   = aws_api_gateway_rest_api.chatbot.id
+  resource_id   = aws_api_gateway_resource.chat_history.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "chat_history_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.chat_history.id
+  http_method = aws_api_gateway_method.chat_history_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "chat_history_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.chat_history.id
+  http_method = aws_api_gateway_method.chat_history_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "chat_history_options" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot.id
+  resource_id = aws_api_gateway_resource.chat_history.id
+  http_method = aws_api_gateway_method.chat_history_options.http_method
+  status_code = aws_api_gateway_method_response.chat_history_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }

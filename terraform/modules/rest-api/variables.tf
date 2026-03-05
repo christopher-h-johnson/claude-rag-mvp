@@ -62,3 +62,37 @@ variable "document_delete_invoke_arn" {
   description = "Invoke ARN of the Document Delete Lambda function"
   type        = string
 }
+
+variable "chat_history_function_name" {
+  description = "Name of the Chat History Lambda function"
+  type        = string
+}
+
+variable "chat_history_invoke_arn" {
+  description = "Invoke ARN of the Chat History Lambda function"
+  type        = string
+}
+
+variable "enable_waf" {
+  description = "Enable AWS WAF for API Gateway"
+  type        = bool
+  default     = true
+}
+
+variable "waf_rate_limit" {
+  description = "Rate limit for WAF (requests per 5 minutes per IP)"
+  type        = number
+  default     = 2000
+}
+
+variable "waf_ip_allowlist" {
+  description = "List of IP addresses or CIDR blocks to allow (empty = allow all)"
+  type        = list(string)
+  default     = []
+}
+
+variable "waf_ip_blocklist" {
+  description = "List of IP addresses or CIDR blocks to block"
+  type        = list(string)
+  default     = []
+}
