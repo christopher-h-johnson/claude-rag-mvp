@@ -44,10 +44,10 @@ The index includes the following fields for document tracking:
 Creates a new index if it doesn't exist:
 
 ```bash
-aws lambda invoke \
-  --function-name <env>-chatbot-vector-store-init \
-  --payload '{"action":"create"}' \
-  response.json
+$payload = '{"action":"create"}'
+$bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
+$base64 = [Convert]::ToBase64String($bytes)
+aws lambda invoke --function-name dev-vector-store-init-index --payload $base64 response.json
 
 cat response.json
 ```
@@ -55,7 +55,7 @@ cat response.json
 Or simply:
 ```bash
 aws lambda invoke \
-  --function-name <env>-chatbot-vector-store-init \
+  --function-name <env>-vector-store-init-index \
   --payload '{}' \
   response.json
 ```
@@ -73,10 +73,10 @@ aws lambda invoke \
 Deletes an existing index:
 
 ```bash
-aws lambda invoke \
-  --function-name <env>-chatbot-vector-store-init \
-  --payload '{"action":"delete"}' \
-  response.json
+$payload = '{"action":"delete"}'
+$bytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
+$base64 = [Convert]::ToBase64String($bytes)
+aws lambda invoke --function-name dev-vector-store-init-index --payload $base64 response.json
 
 cat response.json
 ```

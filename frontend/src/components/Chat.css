@@ -1,0 +1,56 @@
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+    /* Important for flex children */
+}
+
+.chat-container>* {
+    flex-shrink: 0;
+    /* Prevent error messages from shrinking */
+}
+
+.chat-container>.chat-window {
+    flex: 1;
+    /* Allow chat window to grow */
+    min-height: 0;
+    /* Important for nested flex */
+}
+
+.connection-status {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 8px;
+    text-align: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 1000;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+
+.chat-window-flex {
+    flex: 1 1 auto;
+    /* Allow chat window to grow and shrink */
+    min-height: 0;
+    /* Important for nested flex */
+    overflow: hidden;
+    /* Ensure scrolling works within */
+}

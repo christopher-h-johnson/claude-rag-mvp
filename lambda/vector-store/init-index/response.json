@@ -1,1 +1,1 @@
-{"statusCode":200,"body":"{\"success\":true,\"message\":\"Index 'documents' already exists\"}"}
+{"statusCode":200,"body":"{\"success\":true,\"message\":\"Index 'documents' created successfully with k-NN configuration\"}"}
