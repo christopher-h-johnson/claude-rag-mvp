@@ -88,7 +88,6 @@ resource "aws_lambda_function" "chat_history" {
     variables = {
       CHAT_HISTORY_TABLE_NAME = var.chat_history_table_name
       KMS_KEY_ID              = var.kms_key_id
-      AWS_REGION              = var.aws_region
       LOG_LEVEL               = "INFO"
     }
   }

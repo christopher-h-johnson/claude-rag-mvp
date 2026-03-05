@@ -44,7 +44,7 @@ import { Embedding } from './vector-store';
 
 const embedding: Embedding = {
     chunkId: 'chunk-123',
-    vector: new Array(1536).fill(0.1), // 1536-dimension vector
+    vector: new Array(1024).fill(0.1), // 1024-dimension vector
     text: 'This is a document chunk',
     metadata: {
         documentId: 'doc-456',
@@ -74,7 +74,7 @@ await vectorStore.batchIndexEmbeddings(embeddings);
 
 ```typescript
 // Basic search
-const queryVector = new Array(1536).fill(0.5);
+const queryVector = new Array(1024).fill(0.5);
 const results = await vectorStore.searchSimilar(queryVector, 5);
 
 console.log(results);
@@ -170,7 +170,7 @@ Batch index multiple embeddings using OpenSearch bulk API.
 
 Search for similar vectors using k-NN query.
 
-- `queryVector`: Query embedding (must be 1536 dimensions)
+- `queryVector`: Query embedding (must be 1024 dimensions)
 - `k`: Number of results to return
 - `filters`: Optional search filters
 
@@ -185,7 +185,7 @@ Delete all chunks associated with a document.
 ```typescript
 interface Embedding {
     chunkId: string;
-    vector: number[]; // 1536 dimensions
+    vector: number[]; // 1024 dimensions
     text: string;
     metadata: ChunkMetadata;
 }
@@ -263,7 +263,7 @@ try {
 ## Performance Considerations
 
 - Use `batchIndexEmbeddings()` for bulk operations (more efficient than multiple `indexEmbedding()` calls)
-- Query vectors must be exactly 1536 dimensions (validated before search)
+- Query vectors must be exactly 1024 dimensions (validated before search)
 - Search results are limited by the `k` parameter
 - Filters are applied at the OpenSearch level for optimal performance
 

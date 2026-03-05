@@ -217,12 +217,12 @@ This implementation satisfies:
 
 - **Requirement 7.3**: Vector Store supports approximate nearest neighbor search
   - ✅ HNSW algorithm configured
-  - ✅ 1536 dimensions for Titan Embeddings compatibility
+  - ✅ 1024 dimensions for Titan Embeddings V2 compatibility
   - ✅ Cosine similarity metric
   - ✅ Optimized parameters for accuracy/performance balance
 
 ## Related Components
 
-- **Embedding Generator** (`lambda/shared/embeddings`) - Generates the 1536-dimension vectors
+- **Embedding Generator** (`lambda/shared/embeddings`) - Generates the 1024-dimension vectors
 - **Vector Store Client** (Task 9.2) - Interfaces with this index for search operations
 - **Document Processor** (Task 10) - Populates this index with document embeddings

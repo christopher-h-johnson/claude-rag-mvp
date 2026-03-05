@@ -23,7 +23,7 @@
 - Initial release
 - OpenSearch index initialization with k-NN configuration
 - HNSW algorithm support
-- 1536-dimension vector support for Titan Embeddings
+- 1024-dimension vector support for Titan Embeddings V2
 - Metadata fields for document tracking
 - Idempotent index creation
 - Comprehensive error handling
@@ -32,7 +32,7 @@
 - IAM authentication
 
 ### Configuration
-- Vector dimensions: 1536
+- Vector dimensions: 1024
 - Algorithm: HNSW
 - Engine: nmslib (deprecated in 3.0+)
 - Similarity metric: Cosine

@@ -1,381 +1,271 @@
-# REST API Gateway Module - Implementation Summary
+# REST API Module Implementation Summary
 
 ## Overview
 
-This document summarizes the implementation of the REST API Gateway Terraform module for the AWS Claude RAG Chatbot system.
+This document summarizes the implementation of the REST API Gateway module for the AWS Claude RAG Chatbot, including throttling and AWS WAF configuration as specified in tasks 19.1 and 19.2.
 
-## Purpose
+## Task 19.1: REST API Configuration ✅
 
-The REST API Gateway module provides:
-- HTTP REST API for authentication and future endpoints
-- Lambda Authorizer integration for token-based authentication
-- CORS configuration for browser access
-- CloudWatch logging and monitoring
-- Throttling and rate limiting
+### Resources Created
 
-## Components Created
+1. **API Gateway REST API**
+   - Regional endpoint for lower latency
+   - Custom Lambda Authorizer with 5-minute caching
+   - Structured CloudWatch logging with 365-day retention
 
-### 1. API Gateway REST API
+2. **API Endpoints**
+   - `POST /auth/login` - User authentication (no auth required)
+   - `POST /auth/logout` - Session termination (requires auth)
+   - `GET /documents` - List user documents (requires auth)
+   - `POST /documents/upload` - Generate presigned upload URL (requires auth)
+   - `DELETE /documents/{documentId}` - Delete document (requires auth)
+   - `GET /chat/history` - Retrieve conversation history (requires auth)
 
-**Resource**: `aws_api_gateway_rest_api.chatbot`
+3. **Request/Response Models**
+   - LoginRequest/LoginResponse with JSON schema validation
+   - UploadRequest/UploadResponse with file size and type constraints
+   - ErrorResponse for consistent error handling
 
-- **Type**: Regional endpoint
-- **Name**: `{environment}-chatbot-api`
-- **Purpose**: Main REST API for the chatbot system
+4. **Request Validators**
+   - Body validator for POST requests
+   - Parameters validator for GET/DELETE requests
+   - All validator for combined validation
 
-### 2. Lambda Authorizer
+5. **CORS Configuration**
+   - OPTIONS methods for all endpoints
+   - Wildcard origin support (`*`)
+   - Proper headers configuration for browser access
 
-**Resource**: `aws_api_gateway_authorizer.lambda`
+## Task 19.2: Throttling and WAF Configuration ✅
 
-- **Type**: TOKEN authorizer
-- **Identity Source**: `Authorization` header
-- **Cache TTL**: 5 minutes (300 seconds)
-- **Purpose**: Validates JWT tokens for protected endpoints
+### API Gateway Throttling
 
-**IAM Role**: `aws_iam_role.api_gateway_authorizer`
-- Allows API Gateway to invoke the Lambda Authorizer function
+Configured at the method settings level:
+- **Burst Limit**: 100 requests
+- **Rate Limit**: 50 requests/second
+- Applied to all methods (`*/*`)
 
-### 3. Authentication Endpoints
+This provides the first layer of protection against abuse at the API Gateway level.
 
-#### POST /auth/login
+### AWS WAF Configuration
 
-- **Authorization**: None (public endpoint)
-- **Integration**: AWS_PROXY with Login Lambda
-- **Purpose**: User authentication and session creation
-- **CORS**: Enabled
+#### WAF Web ACL
+Created a comprehensive WAF Web ACL with multiple protection layers:
 
-#### POST /auth/logout
+1. **Rate-Based Rule (Priority 1)**
+   - Default: 2000 requests per 5 minutes per IP
+   - Configurable via `waf_rate_limit` variable
+   - Blocks IPs exceeding threshold
+   - Automatic unblocking after 5 minutes
 
-- **Authorization**: CUSTOM (requires valid token)
-- **Integration**: AWS_PROXY with Logout Lambda
-- **Purpose**: Session termination
-- **CORS**: Enabled
+2. **AWS Managed Rules - Common Rule Set (Priority 2)**
+   - Protects against OWASP Top 10 vulnerabilities
+   - Common web exploits protection
+   - Some rules set to COUNT mode to avoid false positives:
+     - `SizeRestrictions_BODY` - Allows larger request bodies
+     - `GenericRFI_BODY` - Reduces false positives for legitimate requests
 
-### 4. CORS Configuration
+3. **AWS Managed Rules - Known Bad Inputs (Priority 3)**
+   - Blocks requests with known malicious patterns
+   - Malformed request detection
+   - Known attack signature blocking
 
-**OPTIONS Methods**: Configured for both `/auth/login` and `/auth/logout`
+4. **AWS Managed Rules - SQL Injection (Priority 4)**
+   - SQL injection pattern detection
+   - Malicious SQL query blocking
+   - Database protection
 
-- **Allowed Origins**: `*` (wildcard)
-- **Allowed Methods**: `POST, OPTIONS`
-- **Allowed Headers**: `Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token`
-- **Type**: MOCK integration (returns 200 immediately)
+#### IP Filtering
 
-### 5. API Gateway Stage
+Optional IP-based access control:
+- **IP Blocklist**: Block specific IPs or CIDR ranges
+- **IP Allowlist**: Allow only specific IPs (optional)
+- Blocklist has priority 0 (evaluated first)
 
-**Resource**: `aws_api_gateway_stage.chatbot`
+#### WAF Logging
 
-- **Stage Name**: Matches environment (e.g., `dev`, `prod`)
-- **Auto Deploy**: Enabled
-- **Access Logs**: Structured JSON format to CloudWatch
-- **Throttling**: 
-  - Burst limit: 100 requests
-  - Rate limit: 50 requests/second
-- **Logging Level**: INFO
-- **Metrics**: Enabled
-- **Data Trace**: Enabled
+- CloudWatch Logs: `/aws/wafv2/{environment}-chatbot-api`
+- 365-day retention for compliance
+- Sensitive header redaction:
+  - Authorization header
+  - Cookie header
+- CloudWatch metrics for each rule
+- Sampled requests for analysis
 
-### 6. CloudWatch Logging
+#### Configuration Options
 
-**Log Group**: `/aws/apigateway/{environment}-chatbot-api`
+The module provides flexible WAF configuration:
 
-- **Retention**: 365 days
-- **Format**: Structured JSON with:
-  - Request ID
-  - Source IP
-  - User identity
-  - Request time
-  - HTTP method and path
-  - Response status and length
+```hcl
+variable "enable_waf" {
+  description = "Enable AWS WAF for API Gateway"
+  type        = bool
+  default     = true
+}
 
-### 7. Lambda Permissions
+variable "waf_rate_limit" {
+  description = "Rate limit for WAF (requests per 5 minutes per IP)"
+  type        = number
+  default     = 2000
+}
 
-**Permissions Created**:
-- API Gateway → Login Lambda
-- API Gateway → Logout Lambda
-- API Gateway → Authorizer Lambda
+variable "waf_ip_allowlist" {
+  description = "List of IP addresses or CIDR blocks to allow"
+  type        = list(string)
+  default     = []
+}
 
-## Module Interface
-
-### Inputs
-
-| Variable | Type | Description |
-|----------|------|-------------|
-| environment | string | Environment name (dev, staging, prod) |
-| authorizer_function_arn | string | ARN of Lambda Authorizer |
-| authorizer_invoke_arn | string | Invoke ARN of Lambda Authorizer |
-| login_function_name | string | Name of Login Lambda |
-| login_invoke_arn | string | Invoke ARN of Login Lambda |
-| logout_function_name | string | Name of Logout Lambda |
-| logout_invoke_arn | string | Invoke ARN of Logout Lambda |
-
-### Outputs
-
-| Output | Description |
-|--------|-------------|
-| rest_api_id | API Gateway REST API ID |
-| rest_api_execution_arn | Execution ARN for permissions |
-| rest_api_root_resource_id | Root resource ID for adding endpoints |
-| stage_url | Full URL of the API stage |
-| stage_name | Stage name (environment) |
-| authorizer_id | Lambda Authorizer ID |
-
-## Integration with Main Configuration
-
-The module is integrated in `terraform/main.tf`:
-
-```terraform
-module "rest_api" {
-  source = "./modules/rest-api"
-
-  environment              = var.environment
-  authorizer_function_arn  = module.auth.authorizer_function_arn
-  authorizer_invoke_arn    = module.auth.authorizer_invoke_arn
-  login_function_name      = module.auth.login_function_name
-  login_invoke_arn         = module.auth.login_invoke_arn
-  logout_function_name     = module.auth.logout_function_name
-  logout_invoke_arn        = module.auth.logout_invoke_arn
+variable "waf_ip_blocklist" {
+  description = "List of IP addresses or CIDR blocks to block"
+  type        = list(string)
+  default     = []
 }
 ```
 
-## API Endpoints
+## Security Layers
 
-### POST /auth/login
+The implementation provides multiple security layers:
 
-**Request:**
-```json
-{
-  "username": "user@example.com",
-  "password": "password123"
-}
-```
+1. **API Gateway Throttling** (50 req/sec, 100 burst)
+   - Fast, immediate protection
+   - Prevents overwhelming backend services
 
-**Response (200 OK):**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiresAt": 1234567890000,
-  "userId": "user-123"
-}
-```
+2. **WAF Rate Limiting** (2000 req/5min per IP)
+   - Longer-term abuse prevention
+   - Per-IP tracking across 5-minute windows
 
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Invalid credentials"
-}
-```
+3. **WAF Managed Rules**
+   - Protection against common vulnerabilities
+   - SQL injection prevention
+   - Known bad input blocking
 
-### POST /auth/logout
+4. **IP Filtering**
+   - Blocklist for known malicious IPs
+   - Optional allowlist for restricted access
 
-**Headers:**
-```
-Authorization: Bearer <jwt-token>
-```
+5. **Lambda Authorizer**
+   - JWT token validation
+   - Session verification
+   - 5-minute result caching
 
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-```
-
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Unauthorized"
-}
-```
-
-## Authentication Flow
-
-1. **Client** sends credentials to `POST /auth/login`
-2. **Login Lambda** validates credentials and creates session
-3. **Client** receives JWT token
-4. **Client** includes token in `Authorization: Bearer <token>` header
-5. **API Gateway** invokes Lambda Authorizer
-6. **Lambda Authorizer** validates JWT and checks session in DynamoDB
-7. **API Gateway** caches authorization decision for 5 minutes
-8. **API Gateway** allows or denies request
-9. **Protected Lambda** processes the request
-
-## Security Features
-
-1. **Token-Based Authentication**: JWT tokens with 24-hour expiration
-2. **Session Validation**: Authorizer checks DynamoDB for active sessions
-3. **Authorization Caching**: 5-minute cache reduces Lambda invocations
-4. **HTTPS Only**: TLS 1.2+ enforced by API Gateway
-5. **Throttling**: Rate limiting prevents abuse
-6. **Audit Logging**: All requests logged to CloudWatch
-7. **IAM Least Privilege**: Minimal permissions for each component
-
-## Performance Characteristics
-
-- **Login Latency**: ~200-500ms (cold start: ~1-2s)
-- **Logout Latency**: ~100-300ms (cold start: ~1-2s)
-- **Authorizer Latency**: ~50-200ms (cold start: ~1-2s)
-- **Cache Hit Latency**: ~10-50ms (no Lambda invocation)
-- **Throughput**: 50 requests/second sustained, 100 burst
-
-## Cost Estimates
-
-Based on moderate usage (10,000 requests/day):
-
-| Service | Usage | Cost/Month |
-|---------|-------|------------|
-| API Gateway | 300K requests | $0.35 |
-| Lambda (Authorizer) | ~30K invocations (90% cache hit) | $0.10 |
-| Lambda (Login/Logout) | ~10K invocations | $0.05 |
-| CloudWatch Logs | ~1GB/month | $0.50 |
-| **Total** | | **~$1.00/month** |
-
-## Extensibility
-
-The module is designed to be extended with additional endpoints:
-
-```terraform
-# Add a new resource
-resource "aws_api_gateway_resource" "documents" {
-  rest_api_id = module.rest_api.rest_api_id
-  parent_id   = module.rest_api.rest_api_root_resource_id
-  path_part   = "documents"
-}
-
-# Add a protected method
-resource "aws_api_gateway_method" "documents_get" {
-  rest_api_id   = module.rest_api.rest_api_id
-  resource_id   = aws_api_gateway_resource.documents.id
-  http_method   = "GET"
-  authorization = "CUSTOM"
-  authorizer_id = module.rest_api.authorizer_id
-}
-```
+6. **Request Validation**
+   - JSON schema validation
+   - Required field enforcement
+   - Type and constraint checking
 
 ## Monitoring and Observability
 
-### CloudWatch Metrics
-
-- **Count**: Total API requests
-- **4XXError**: Client errors (auth failures, bad requests)
-- **5XXError**: Server errors (Lambda failures)
-- **Latency**: Request latency (p50, p95, p99)
-- **IntegrationLatency**: Lambda execution time
-- **CacheHitCount**: Authorizer cache hits
-- **CacheMissCount**: Authorizer cache misses
-
 ### CloudWatch Logs
+- API Gateway access logs: `/aws/apigateway/{environment}-chatbot-api`
+- WAF logs: `/aws/wafv2/{environment}-chatbot-api`
+- Both with 365-day retention
 
-- **API Gateway Logs**: `/aws/apigateway/{environment}-chatbot-api`
-- **Lambda Logs**: See auth module documentation
+### CloudWatch Metrics
+- Request count and latency
+- 4XX/5XX error rates
+- Authorizer cache hit/miss
+- WAF rule matches and blocks
+- Rate limit violations
 
-### Alarms (Future)
+### WAF Visibility
+- Sampled requests for each rule
+- Detailed blocking reasons
+- IP-based traffic analysis
+- Rule effectiveness metrics
 
-Recommended CloudWatch alarms:
-- 5XX error rate > 1%
-- 4XX error rate > 10%
-- Latency p99 > 2 seconds
-- Throttle count > 0
+## Cost Optimization
 
-## Testing
+1. **Authorizer Caching**: 5-minute TTL reduces Lambda invocations
+2. **Regional Endpoint**: Lower latency and cost vs edge-optimized
+3. **Conditional WAF**: Can be disabled for dev environments
+4. **Managed Rules**: No custom rule maintenance overhead
+5. **Efficient Logging**: Redacted sensitive data reduces storage
 
-### Manual Testing
+## Compliance and Audit
 
-```bash
-# Get API URL
-terraform output rest_api_url
+- 365-day log retention meets most compliance requirements
+- Comprehensive audit trail of all requests
+- Sensitive data redaction in WAF logs
+- Structured JSON logging for easy analysis
+- CloudWatch Logs Insights for querying
 
-# Test login
-curl -X POST https://<api-id>.execute-api.<region>.amazonaws.com/<stage>/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"TestPassword123!"}'
+## Usage Example
 
-# Test logout
-curl -X POST https://<api-id>.execute-api.<region>.amazonaws.com/<stage>/auth/logout \
-  -H "Authorization: Bearer <token>"
+```hcl
+module "rest_api" {
+  source = "./modules/rest-api"
+
+  environment = "prod"
+  
+  # Lambda function references
+  authorizer_function_arn       = module.auth.authorizer_function_arn
+  authorizer_invoke_arn         = module.auth.authorizer_invoke_arn
+  login_function_name           = module.auth.login_function_name
+  login_invoke_arn              = module.auth.login_invoke_arn
+  logout_function_name          = module.auth.logout_function_name
+  logout_invoke_arn             = module.auth.logout_invoke_arn
+  document_upload_function_name = module.documents.upload_function_name
+  document_upload_invoke_arn    = module.documents.upload_invoke_arn
+  document_list_function_name   = module.documents.list_function_name
+  document_list_invoke_arn      = module.documents.list_invoke_arn
+  document_delete_function_name = module.documents.delete_function_name
+  document_delete_invoke_arn    = module.documents.delete_invoke_arn
+  chat_history_function_name    = module.chat.history_function_name
+  chat_history_invoke_arn       = module.chat.history_invoke_arn
+  
+  # WAF configuration
+  enable_waf       = true
+  waf_rate_limit   = 2000
+  waf_ip_blocklist = ["192.0.2.0/24"] # Example: block a CIDR range
+  waf_ip_allowlist = []                # Empty = allow all (except blocklist)
+}
 ```
 
-### Integration Testing (Future)
+## Testing Recommendations
 
-Recommended integration tests:
-1. Login with valid credentials → 200 OK
-2. Login with invalid credentials → 401 Unauthorized
-3. Logout with valid token → 200 OK
-4. Logout with invalid token → 401 Unauthorized
-5. Logout with expired token → 401 Unauthorized
-6. CORS preflight request → 200 OK with correct headers
-7. Rate limiting → 429 Too Many Requests
+1. **Throttling Tests**
+   - Send 100+ requests in quick succession
+   - Verify 429 responses after burst limit
+   - Confirm rate limit enforcement
 
-## Known Limitations
+2. **WAF Tests**
+   - Test rate limit with sustained traffic
+   - Attempt SQL injection patterns
+   - Test IP blocklist functionality
+   - Verify legitimate traffic passes through
 
-1. **CORS Origin**: Currently set to `*` (wildcard) - should be restricted in production
-2. **Custom Domain**: Not configured - requires ACM certificate
-3. **WAF**: Not configured - should be added for production
-4. **API Keys**: Not implemented - consider for additional security
-5. **Usage Plans**: Not configured - consider for rate limiting per client
+3. **Request Validation Tests**
+   - Send invalid JSON schemas
+   - Test missing required fields
+   - Test invalid data types
+   - Verify proper error messages
 
-## Future Enhancements
+4. **CORS Tests**
+   - Send OPTIONS preflight requests
+   - Verify CORS headers in responses
+   - Test from browser environment
 
-1. Add document management endpoints (`/documents`)
-2. Add chat history endpoints (`/chat/history`)
-3. Configure custom domain with ACM certificate
-4. Add AWS WAF for DDoS protection
-5. Implement API keys and usage plans
-6. Add request/response validation
-7. Implement API versioning (e.g., `/v1/auth/login`)
-8. Add CloudWatch alarms for monitoring
-9. Implement blue-green deployments with canary releases
-10. Add X-Ray tracing for distributed tracing
+## Requirements Satisfied
 
-## Dependencies
+- **Requirement 13.5**: Infrastructure as Code deployment ✅
+- **Requirement 10.1**: Rate limiting enforcement ✅
+- **Requirement 11.1**: Comprehensive audit logging ✅
+- **Security best practices**: Multiple protection layers ✅
 
-This module depends on:
-- **auth module**: Provides Lambda Authorizer and auth functions
-- **database module**: Provides Sessions table for authorizer
+## Next Steps
 
-## Files Created
+1. Deploy the module to a test environment
+2. Run integration tests with actual traffic
+3. Monitor CloudWatch metrics and logs
+4. Tune WAF rules based on traffic patterns
+5. Configure CloudWatch alarms for anomalies
+6. Document any IP addresses for blocklist/allowlist
+7. Set up custom domain with ACM certificate (optional)
 
-```
-terraform/modules/rest-api/
-├── main.tf                      # Main Terraform configuration
-├── variables.tf                 # Input variables
-├── outputs.tf                   # Output values
-├── README.md                    # Module documentation
-└── IMPLEMENTATION_SUMMARY.md    # This file
-```
+## Notes
 
-## Deployment
-
-The module is automatically deployed when running:
-
-```bash
-cd terraform
-terraform init
-terraform apply
-```
-
-## Rollback
-
-To rollback changes:
-
-```bash
-terraform apply -target=module.rest_api -auto-approve
-```
-
-Or destroy and recreate:
-
-```bash
-terraform destroy -target=module.rest_api
-terraform apply -target=module.rest_api
-```
-
-## Conclusion
-
-The REST API Gateway module provides a production-ready HTTP API with:
-- ✅ Token-based authentication
-- ✅ Lambda Authorizer integration
-- ✅ CORS support for browsers
-- ✅ CloudWatch logging and monitoring
-- ✅ Throttling and rate limiting
-- ✅ Extensible design for future endpoints
-
-The module is ready for use and can be extended with additional endpoints as needed for document management, chat history, and other features.
+- WAF is enabled by default but can be disabled for dev environments
+- Rate limits are configurable but defaults follow requirements
+- All sensitive data is redacted from logs
+- The module is fully self-contained and reusable
+- CloudWatch Logs Insights can be used for advanced log analysis

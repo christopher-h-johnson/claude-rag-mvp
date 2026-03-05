@@ -131,7 +131,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [x] 7. Implement Bedrock Service integration
-  - [x] 7.1 Create Bedrock client wrapper for Claude 3 Sonnet
+  - [x] 7.1 Create Bedrock client wrapper for Claude Haiku 4.5 
     - Initialize AWS SDK Bedrock Runtime client
     - Implement generateResponse with streaming support (InvokeModelWithResponseStream)
     - Implement generateResponseSync for non-streaming requests
@@ -487,20 +487,20 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 19. Implement REST API Gateway configuration
-  - [ ] 19.1 Create REST API in API Gateway with Terraform
+  - [x] 19.1 Create REST API in API Gateway with Terraform
     - Define REST API with resources: /auth, /documents, /chat
     - Configure Lambda integrations for each endpoint
     - Enable CORS for browser access
     - Configure request/response models and validation
     - _Requirements: 13.5_
   
-  - [ ] 19.2 Configure API Gateway throttling and WAF
+  - [x] 19.2 Configure API Gateway throttling and WAF
     - Set burst limit=100, rate limit=50 requests/second
     - Deploy AWS WAF with rate-based rule
     - Configure IP allowlist/blocklist if needed
     - _Requirements: 10.1_
   
-  - [ ] 19.3 Configure API Gateway logging
+  - [x] 19.3 Configure API Gateway logging
     - Enable CloudWatch Logs for API Gateway
     - Log full request/response for audit trail
     - _Requirements: 11.1_

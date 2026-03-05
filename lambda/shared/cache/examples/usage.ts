@@ -45,8 +45,8 @@ async function exampleSearchCache() {
 
     await cache.connect();
 
-    // Simulate query embedding (1536 dimensions)
-    const queryEmbedding = Array(1536).fill(0).map(() => Math.random());
+    // Simulate query embedding (1024 dimensions)
+    const queryEmbedding = Array(1024).fill(0).map(() => Math.random());
 
     // Try to get from cache
     let results = await cache.getCachedSearchResults(queryEmbedding);

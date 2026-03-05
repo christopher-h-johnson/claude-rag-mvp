@@ -12,7 +12,7 @@ The Generate Embeddings Lambda is part of the document processing pipeline:
 
 ## Features
 
-- Generates 1536-dimension embeddings using Amazon Bedrock Titan Embeddings
+- Generates 1024-dimension embeddings using Amazon Bedrock Titan Embeddings V2
 - Processes chunks in batches of 25 for optimal throughput
 - Includes progress tracking for large document sets
 - Handles retry logic with exponential backoff for throttling errors

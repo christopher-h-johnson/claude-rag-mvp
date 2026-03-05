@@ -23,7 +23,7 @@ async function main() {
     console.log('\n--- Example 1: Index Single Embedding ---');
     const singleEmbedding: Embedding = {
         chunkId: 'chunk-001',
-        vector: generateRandomVector(1536),
+        vector: generateRandomVector(1024),
         text: 'This is the first document chunk about machine learning.',
         metadata: {
             documentId: 'doc-001',
@@ -43,7 +43,7 @@ async function main() {
     const batchEmbeddings: Embedding[] = [
         {
             chunkId: 'chunk-002',
-            vector: generateRandomVector(1536),
+            vector: generateRandomVector(1024),
             text: 'Deep learning is a subset of machine learning.',
             metadata: {
                 documentId: 'doc-001',
@@ -56,7 +56,7 @@ async function main() {
         },
         {
             chunkId: 'chunk-003',
-            vector: generateRandomVector(1536),
+            vector: generateRandomVector(1024),
             text: 'Neural networks are the foundation of deep learning.',
             metadata: {
                 documentId: 'doc-001',
@@ -69,7 +69,7 @@ async function main() {
         },
         {
             chunkId: 'chunk-004',
-            vector: generateRandomVector(1536),
+            vector: generateRandomVector(1024),
             text: 'Cloud computing enables scalable AI applications.',
             metadata: {
                 documentId: 'doc-002',
@@ -90,7 +90,7 @@ async function main() {
 
     // Example 3: Basic vector search
     console.log('\n--- Example 3: Basic Vector Search ---');
-    const queryVector = generateRandomVector(1536);
+    const queryVector = generateRandomVector(1024);
     const basicResults = await vectorStore.searchSimilar(queryVector, 3);
 
     console.log(`Found ${basicResults.length} results:`);
@@ -178,7 +178,7 @@ async function errorHandlingExample() {
         // Try to index with missing required fields
         const invalidEmbedding = {
             chunkId: 'test',
-            vector: generateRandomVector(1536),
+            vector: generateRandomVector(1024),
             text: 'Test'
             // Missing metadata
         } as any;

@@ -8,7 +8,7 @@ This module provides a TypeScript client for generating vector embeddings using 
 
 ## Features
 
-- Generate 1536-dimension embeddings for single text inputs
+- Generate 1024-dimension embeddings for single text inputs
 - Batch processing with configurable batch size (default: 25)
 - Parallel batch processing for improved throughput on large document sets
 - Automatic retry logic with exponential backoff for rate limiting
@@ -34,7 +34,7 @@ const generator = new EmbeddingGenerator();
 
 // Generate single embedding
 const result = await generator.generateEmbedding('Hello, world!');
-console.log(result.embedding); // Array of 1536 numbers
+console.log(result.embedding); // Array of 1024 numbers
 console.log(result.inputTextTokenCount); // Token count
 ```
 
@@ -123,14 +123,14 @@ Generate embedding for a single text input with automatic retry logic.
 - `text` - The text to generate an embedding for (cannot be empty)
 
 **Returns:**
-- `embedding` - Array of 1536 numbers representing the vector
+- `embedding` - Array of 1024 numbers representing the vector
 - `inputTextTokenCount` - Number of tokens in the input text (optional)
 
 **Throws:**
 - Error if text is empty or whitespace-only
 - Error if Bedrock API call fails after retries
 - Error if response format is invalid
-- Error if embedding dimensions are not 1536
+- Error if embedding dimensions are not 1024
 
 **Retry Logic:**
 - Automatically retries on throttling errors (ThrottlingException, 429, 503)
@@ -147,7 +147,7 @@ Generate embeddings for multiple text inputs in batches.
 - `onProgress` - Optional callback for progress tracking
 
 **Returns:**
-- `embeddings` - Array of embedding vectors (each 1536 dimensions)
+- `embeddings` - Array of embedding vectors (each 1024 dimensions)
 - `totalTokenCount` - Total tokens processed across all texts (optional)
 
 **Throws:**
