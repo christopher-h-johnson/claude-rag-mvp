@@ -491,11 +491,13 @@ async function processChatMessage(
         // Step 2: Prepare prompt for Bedrock
         let finalPrompt = message;
         let systemPrompt: string | undefined;
+        let conversationHistoryForBedrock = conversationHistory;
 
         if (assembledContext) {
             // Use assembled context with RAG
-            finalPrompt = assembledContext.prompt;
+            finalPrompt = assembledContext.userPrompt;
             systemPrompt = assembledContext.systemPrompt;
+            conversationHistoryForBedrock = assembledContext.conversationHistory;
         }
 
         // Validate that finalPrompt is not empty
@@ -523,7 +525,7 @@ async function processChatMessage(
                 for await (const chunk of bedrockService!.generateResponse({
                     prompt: finalPrompt,
                     systemPrompt,
-                    conversationHistory: conversationHistory
+                    conversationHistory: conversationHistoryForBedrock
                         .filter(msg => msg.content && msg.content.trim().length > 0) // Filter empty messages again
                         .map(msg => ({
                             role: msg.role as 'user' | 'assistant',
@@ -535,12 +537,13 @@ async function processChatMessage(
                     if (chunk.text) {
                         fullResponse += chunk.text;
 
-                        // Send chunk to client
+                        // Send accumulated content to client (not just the delta)
+                        // This allows the frontend to simply replace the content each time
                         await messageSender.sendMessage(
                             connectionId,
                             MessageSender.createChatResponse(
                                 messageId,
-                                chunk.text,
+                                fullResponse,  // Send full accumulated content
                                 false
                             )
                         );
@@ -549,12 +552,16 @@ async function processChatMessage(
                     if (chunk.isComplete) {
                         tokenCount = chunk.tokenCount || 0;
 
-                        // Send final message with retrievedChunks metadata
+                        // Send final message with full accumulated content and retrievedChunks metadata
                         const retrievedChunksMetadata = retrievedChunks.length > 0
                             ? retrievedChunks.map(chunk => ({
+                                chunkId: chunk.chunkId,
+                                documentId: chunk.documentId,
                                 documentName: chunk.documentName,
                                 pageNumber: chunk.pageNumber,
-                                text: chunk.text.substring(0, 200), // Truncate for metadata
+                                text: chunk.text.substring(0, 500), // Truncate for metadata but keep more context
+                                score: chunk.score,
+                                metadata: chunk.metadata,
                             }))
                             : undefined;
 
@@ -562,7 +569,7 @@ async function processChatMessage(
                             connectionId,
                             MessageSender.createChatResponse(
                                 messageId,
-                                '',
+                                fullResponse,  // Send full accumulated content, not empty string
                                 true,
                                 retrievedChunksMetadata
                             )

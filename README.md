@@ -1,4 +1,4 @@
-# AWS Claude RAG Chatbot
+# AWS Claude RAG Agent
 
 A production-ready, serverless RAG (Retrieval-Augmented Generation) chatbot system built on AWS that combines Claude Haiku 4.5 via Amazon Bedrock with semantic document search capabilities. The system provides real-time chat responses grounded in organizational knowledge from PDF documents.
 
@@ -641,7 +641,7 @@ This project follows a spec-driven development approach:
 
 ## License
 
-[Add your license here]
+[LICENSE](LICENSE.md)
 
 ## Support
 

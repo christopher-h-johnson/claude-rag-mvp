@@ -1,8 +1,8 @@
-# Implementation Plan: AWS Claude RAG Chatbot
+# Implementation Plan: AWS Claude RAG Agent
 
 ## Overview
 
-This implementation plan breaks down the AWS Claude RAG Chatbot into discrete coding tasks. The system uses TypeScript for Lambda functions and React/TypeScript for the frontend. The implementation follows a bottom-up approach: infrastructure setup, core backend services, document processing pipeline, frontend interface, and finally integration and testing.
+This implementation plan breaks down the AWS Claude RAG Agent into discrete coding tasks. The system uses TypeScript for Lambda functions and React/TypeScript for the frontend. The implementation follows a bottom-up approach: infrastructure setup, core backend services, document processing pipeline, frontend interface, and finally integration and testing.
 
 The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSearch, DynamoDB, and Bedrock. Each task builds incrementally, ensuring that components are tested and integrated as they're developed.
 
@@ -506,15 +506,15 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: 11.1_
 
 
-- [ ] 20. Implement Lambda concurrency and scaling configuration
-  - [ ] 20.1 Configure Lambda concurrency limits
+- [x] 20. Implement Lambda concurrency and scaling configuration
+  - [x] 20.1 Configure Lambda concurrency limits
     - Set reserved concurrency for WebSocket handler to support 100 concurrent connections
     - Set provisioned concurrency for latency-sensitive functions
     - Configure memory allocation: 1024MB for light functions, 3008MB for document processing
     - Set timeout: 30s for API handlers, 300s for document processing
     - _Requirements: 9.1, 13.2_
   
-  - [ ] 20.2 Configure Lambda VPC networking
+  - [x] 20.2 Configure Lambda VPC networking
     - Attach Lambda functions to VPC private subnets for OpenSearch access
     - Configure security groups for Lambda → OpenSearch communication
     - Ensure NAT Gateway for outbound Bedrock API calls
@@ -528,27 +528,27 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 21. Implement frontend React application
-  - [ ] 21.1 Set up React project with TypeScript
+  - [x] 21.1 Set up React project with TypeScript
     - Initialize React app with TypeScript template
     - Install dependencies: WebSocket client, AWS SDK, UI library (Material-UI or similar)
     - Configure build for S3 deployment
     - _Requirements: 2.1_
   
-  - [ ] 21.2 Create authentication components
+  - [x] 21.2 Create authentication components
     - Implement Login component with username/password form
     - Implement session token storage in localStorage
     - Implement token refresh logic
     - Implement logout functionality
     - _Requirements: 1.1, 1.2, 1.4_
   
-  - [ ] 21.3 Create WebSocket connection manager
+  - [x] 21.3 Create WebSocket connection manager
     - Implement WebSocket client with automatic reconnection
     - Implement exponential backoff for reconnection (1s, 2s, 4s, 8s)
     - Handle connection state: connecting, connected, disconnected
     - Implement keep-alive ping every 5 minutes
     - _Requirements: 2.3, 2.4_
   
-  - [ ] 21.4 Create chat interface components
+  - [x] 21.4 Create chat interface components
     - Implement ChatWindow component displaying message history
     - Implement MessageInput component with send button
     - Display user messages immediately on submission (optimistic UI)
@@ -557,7 +557,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Display document citations for RAG responses
     - _Requirements: 2.1, 2.2, 2.5, 7.4_
   
-  - [ ] 21.5 Create document management components
+  - [x] 21.5 Create document management components
     - Implement DocumentUpload component with file picker
     - Validate file type (PDF only) and size (max 100MB) before upload
     - Upload directly to S3 using presigned URL
@@ -566,7 +566,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - Implement document delete functionality
     - _Requirements: 4.1, 4.2_
   
-  - [ ] 21.6 Implement error handling and user feedback
+  - [x] 21.6 Implement error handling and user feedback
     - Display error messages for failed requests
     - Display rate limit errors with retry countdown
     - Handle WebSocket disconnection gracefully

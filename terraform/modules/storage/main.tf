@@ -40,6 +40,19 @@ resource "aws_s3_bucket_public_access_block" "documents" {
   restrict_public_buckets = true
 }
 
+# S3 Bucket CORS Configuration
+resource "aws_s3_bucket_cors_configuration" "documents" {
+  bucket = aws_s3_bucket.documents.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST", "GET", "HEAD"]
+    allowed_origins = [var.cors_origin]
+    expose_headers  = ["ETag", "x-amz-server-side-encryption", "x-amz-request-id", "x-amz-id-2"]
+    max_age_seconds = 3000
+  }
+}
+
 # S3 Bucket Lifecycle Configuration
 resource "aws_s3_bucket_lifecycle_configuration" "documents" {
   bucket = aws_s3_bucket.documents.id

@@ -82,7 +82,7 @@ resource "aws_lambda_function" "chat_history" {
   runtime          = "nodejs20.x"
   role             = aws_iam_role.chat_history.arn
   timeout          = 30
-  memory_size      = 512
+  memory_size      = 1024
 
   environment {
     variables = {

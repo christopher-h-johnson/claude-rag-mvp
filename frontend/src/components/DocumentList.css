@@ -1,0 +1,228 @@
+.document-list {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.list-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.btn-refresh {
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-refresh:hover:not(:disabled) {
+    background: #e9ecef;
+}
+
+.btn-refresh:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loading-state,
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.error-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.error-state p {
+    color: #dc3545;
+    margin-bottom: 16px;
+}
+
+.btn-retry {
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-retry:hover {
+    background: #0056b3;
+}
+
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.document-card {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 16px;
+    transition: box-shadow 0.2s;
+}
+
+.document-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.document-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.document-name {
+    font-weight: 500;
+    color: #333;
+    word-break: break-word;
+    flex: 1;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-processing {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-pending {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.document-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.meta-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.meta-label {
+    color: #666;
+}
+
+.meta-value {
+    color: #333;
+    font-weight: 500;
+}
+
+.document-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.btn-delete {
+    width: 100%;
+    padding: 8px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-delete:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.btn-delete:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.confirm-delete {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.confirm-text {
+    font-size: 14px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.btn-confirm-delete,
+.btn-cancel-delete {
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-confirm-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-confirm-delete:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.btn-cancel-delete {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-cancel-delete:hover:not(:disabled) {
+    background: #545b62;
+}
+
+.btn-confirm-delete:disabled,
+.btn-cancel-delete:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

@@ -92,8 +92,11 @@ resource "aws_lambda_function" "connect" {
   role             = aws_iam_role.connect_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 256
+  timeout          = 30
+  memory_size      = 1024
+
+  # Reserved concurrency to support 100 concurrent connections
+  reserved_concurrent_executions = 100
 
   environment {
     variables = {
@@ -181,8 +184,11 @@ resource "aws_lambda_function" "disconnect" {
   role             = aws_iam_role.disconnect_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 256
+  timeout          = 30
+  memory_size      = 1024
+
+  # Reserved concurrency to support 100 concurrent disconnections
+  reserved_concurrent_executions = 100
 
   environment {
     variables = {
@@ -328,8 +334,11 @@ resource "aws_lambda_function" "message" {
   role             = aws_iam_role.message_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 512
+  timeout          = 30
+  memory_size      = 1024
+
+  # Reserved concurrency to support 100 concurrent message handlers
+  reserved_concurrent_executions = 100
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids

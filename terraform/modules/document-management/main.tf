@@ -100,13 +100,14 @@ resource "aws_lambda_function" "upload" {
   role             = aws_iam_role.upload_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 512
+  timeout          = 30
+  memory_size      = 1024
 
   environment {
     variables = {
       DOCUMENT_METADATA_TABLE = var.document_metadata_table_name
       DOCUMENTS_BUCKET        = var.documents_bucket_name
+      CORS_ORIGIN             = var.cors_origin
     }
   }
 
@@ -194,12 +195,13 @@ resource "aws_lambda_function" "list" {
   role             = aws_iam_role.list_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 512
+  timeout          = 30
+  memory_size      = 1024
 
   environment {
     variables = {
       DOCUMENT_METADATA_TABLE = var.document_metadata_table_name
+      CORS_ORIGIN             = var.cors_origin
     }
   }
 
@@ -290,7 +292,8 @@ resource "aws_iam_role_policy" "delete_policy" {
       {
         Effect = "Allow"
         Action = [
-          "es:ESHttpDelete"
+          "es:ESHttpDelete",
+          "es:ESHttpPost"
         ]
         Resource = "${var.opensearch_domain_arn}/*"
       }
@@ -312,8 +315,8 @@ resource "aws_lambda_function" "delete" {
   role             = aws_iam_role.delete_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 512
+  timeout          = 30
+  memory_size      = 1024
 
   environment {
     variables = {
@@ -321,6 +324,7 @@ resource "aws_lambda_function" "delete" {
       DOCUMENTS_BUCKET        = var.documents_bucket_name
       OPENSEARCH_ENDPOINT     = var.opensearch_endpoint
       OPENSEARCH_INDEX        = var.opensearch_index
+      CORS_ORIGIN             = var.cors_origin
     }
   }
 
