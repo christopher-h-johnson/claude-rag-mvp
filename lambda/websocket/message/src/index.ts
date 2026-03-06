@@ -491,11 +491,13 @@ async function processChatMessage(
         // Step 2: Prepare prompt for Bedrock
         let finalPrompt = message;
         let systemPrompt: string | undefined;
+        let conversationHistoryForBedrock = conversationHistory;
 
         if (assembledContext) {
             // Use assembled context with RAG
-            finalPrompt = assembledContext.prompt;
+            finalPrompt = assembledContext.userPrompt;
             systemPrompt = assembledContext.systemPrompt;
+            conversationHistoryForBedrock = assembledContext.conversationHistory;
         }
 
         // Validate that finalPrompt is not empty
@@ -523,7 +525,7 @@ async function processChatMessage(
                 for await (const chunk of bedrockService!.generateResponse({
                     prompt: finalPrompt,
                     systemPrompt,
-                    conversationHistory: conversationHistory
+                    conversationHistory: conversationHistoryForBedrock
                         .filter(msg => msg.content && msg.content.trim().length > 0) // Filter empty messages again
                         .map(msg => ({
                             role: msg.role as 'user' | 'assistant',

@@ -25,7 +25,7 @@ function MainContent() {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            AWS Claude RAG Chatbot
+            AWS Claude RAG Agent
           </Typography>
           <Typography variant="body1" sx={{ mr: 2 }}>
             Welcome, {user?.username}

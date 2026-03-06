@@ -1,8 +1,8 @@
-# Implementation Plan: AWS Claude RAG Chatbot
+# Implementation Plan: AWS Claude RAG Agent
 
 ## Overview
 
-This implementation plan breaks down the AWS Claude RAG Chatbot into discrete coding tasks. The system uses TypeScript for Lambda functions and React/TypeScript for the frontend. The implementation follows a bottom-up approach: infrastructure setup, core backend services, document processing pipeline, frontend interface, and finally integration and testing.
+This implementation plan breaks down the AWS Claude RAG Agent into discrete coding tasks. The system uses TypeScript for Lambda functions and React/TypeScript for the frontend. The implementation follows a bottom-up approach: infrastructure setup, core backend services, document processing pipeline, frontend interface, and finally integration and testing.
 
 The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSearch, DynamoDB, and Bedrock. Each task builds incrementally, ensuring that components are tested and integrated as they're developed.
 
