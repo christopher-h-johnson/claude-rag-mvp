@@ -54,7 +54,7 @@ This chatbot system enables users to interact with Claude Haiku 4.5 while automa
 
 ### Technology Stack
 
-- **Frontend**: React with TypeScript (planned)
+- **Frontend**: React 18 with TypeScript and Vite
 - **Backend**: AWS Lambda (Node.js 18.x/TypeScript)
 - **API Layer**: AWS API Gateway (REST + WebSocket)
 - **AI/ML**: Amazon Bedrock (Claude Haiku 4.5, Titan Embeddings V2)
@@ -69,32 +69,56 @@ This chatbot system enables users to interact with Claude Haiku 4.5 while automa
 
 ```
 .
-├── terraform/              # Infrastructure as Code
-│   ├── main.tf            # Root Terraform configuration
-│   ├── variables.tf       # Input variables
-│   ├── outputs.tf         # Output values
-│   └── modules/           # Terraform modules
-│       ├── auth/          # Authentication infrastructure
-│       ├── database/      # DynamoDB tables
-│       ├── networking/    # VPC, subnets, security groups
-│       ├── opensearch/    # OpenSearch cluster
-│       ├── rest-api/      # REST API Gateway
-│       ├── security/      # IAM roles and policies
-│       ├── storage/       # S3 buckets
-│       ├── websocket/     # WebSocket API Gateway
+├── frontend/              # React frontend application
+│   ├── src/
+│   │   ├── components/   # React components
+│   │   │   ├── Auth.tsx           # Authentication wrapper
+│   │   │   ├── Chat.tsx           # Main chat interface
+│   │   │   ├── ChatWindow.tsx     # Message display
+│   │   │   ├── Message.tsx        # Individual message with citations
+│   │   │   ├── MessageInput.tsx   # Message input field
+│   │   │   ├── DocumentManager.tsx # Document upload/list
+│   │   │   ├── ConnectionStatus.tsx # WebSocket status
+│   │   │   ├── ErrorMessage.tsx    # Error display
+│   │   │   └── RateLimitError.tsx  # Rate limit handling
+│   │   ├── contexts/     # React contexts
+│   │   │   └── AuthContext.tsx    # Authentication state
+│   │   ├── utils/        # Utility functions
+│   │   │   ├── websocket.ts       # WebSocket manager
+│   │   │   ├── api.ts             # REST API client
+│   │   │   └── errorHandler.ts    # Error parsing
+│   │   ├── types/        # TypeScript types
+│   │   │   └── api.ts             # API type definitions
+│   │   └── App.tsx       # Root component
+│   ├── public/           # Static assets
+│   └── package.json      # Dependencies
+│
+├── terraform/            # Infrastructure as Code
+│   ├── main.tf          # Root Terraform configuration
+│   ├── variables.tf     # Input variables
+│   ├── outputs.tf       # Output values
+│   └── modules/         # Terraform modules
+│       ├── auth/        # Authentication infrastructure
+│       ├── database/    # DynamoDB tables
+│       ├── networking/  # VPC, subnets, security groups
+│       ├── opensearch/  # OpenSearch cluster
+│       ├── rest-api/    # REST API Gateway
+│       ├── security/    # IAM roles and policies
+│       ├── storage/     # S3 buckets
+│       ├── websocket/   # WebSocket API Gateway
 │       └── ...
 │
-├── lambda/                # Lambda function source code
-│   ├── auth/             # Authentication functions
-│   │   ├── authorizer/   # JWT token validation
-│   │   ├── login/        # Login endpoint
-│   │   └── logout/       # Logout endpoint
-│   └── websocket/        # WebSocket handlers
-│       ├── connect/      # Connection handler
-│       ├── disconnect/   # Disconnection handler
-│       └── message/      # Message handler (planned)
+├── lambda/              # Lambda function source code
+│   ├── auth/           # Authentication functions
+│   │   ├── authorizer/ # JWT token validation
+│   │   ├── login/      # Login endpoint
+│   │   └── logout/     # Logout endpoint
+│   └── websocket/      # WebSocket handlers
+│       ├── connect/    # Connection handler
+│       ├── disconnect/ # Disconnection handler
+│       └── message/    # Message handler
 │
-└── .kiro/                # Project specifications
+└── .kiro/              # Project specifications
     └── specs/
         └── aws-claude-rag-chatbot/
             ├── requirements.md  # Functional requirements
@@ -104,7 +128,7 @@ This chatbot system enables users to interact with Claude Haiku 4.5 while automa
 
 ## Current Implementation Status
 
-**Overall Progress: 18 of 26 tasks completed (69%)**
+**Overall Progress: 19 of 26 tasks completed (73%)**
 
 ```
 Infrastructure    ████████████████████ 100% (Task 1)
@@ -122,7 +146,7 @@ RAG System        ████████████████████ 1
 Chat History      ████████████████████ 100% (Task 15)
 Notifications     ████████████████████ 100% (Task 16)
 Chat Handler      ████████████████████ 100% (Task 17)
-Frontend          ░░░░░░░░░░░░░░░░░░░░   0% (Tasks 21-22)
+Frontend          ████████████████████ 100% (Task 21)
 Integration       ░░░░░░░░░░░░░░░░░░░░   0% (Task 24)
 ```
 
@@ -276,7 +300,40 @@ Integration       ░░░░░░░░░░░░░░░░░░░░  
 - Audit logging for all chat interactions
 - Integration tests (58 tests covering end-to-end flow, RAG, caching, error handling)
 
-### 📋 Planned (Tasks 18-26)
+#### **Frontend React Application** (Task 21) ✓
+- React 18 with TypeScript and Vite build system
+- Authentication components with login/logout
+  - Session token management with localStorage
+  - Automatic token refresh logic
+  - Post-login delay to prevent WebSocket race conditions
+- WebSocket connection manager
+  - Automatic reconnection with exponential backoff (1s, 2s, 4s, 8s)
+  - Smart retry logic for initial connection failures
+  - Connection state management (connecting, connected, disconnected, error)
+  - Keep-alive ping every 5 minutes
+- Chat interface with streaming responses
+  - Real-time message streaming with in-place updates (no flicker)
+  - Typing indicator while waiting for responses
+  - Optimistic UI updates for user messages
+  - RAG source citations with expandable "View Sources" button
+  - Markdown rendering for assistant responses with syntax highlighting
+  - Auto-scroll to bottom on new messages
+- Document management UI
+  - File upload with drag-and-drop support
+  - PDF validation (type and size checks up to 100MB)
+  - Upload progress tracking with presigned URLs
+  - Document list with metadata display
+  - Document deletion with confirmation
+- Error handling and user feedback
+  - Rate limit errors with countdown timer
+  - Connection status indicators
+  - Reconnection attempt tracking
+  - Graceful error messages with retry options
+  - Auto-dismissing success notifications
+- Responsive design with CSS Grid/Flexbox
+- Component architecture: Auth, Chat, ChatWindow, Message, MessageInput, DocumentManager, ConnectionStatus, ErrorMessage, RateLimitError
+
+### 📋 Planned (Tasks 18-20, 22-26)
 
 #### **Infrastructure Foundation** (Task 1) ✓
 - VPC with private subnets and NAT Gateway
@@ -396,12 +453,8 @@ Integration       ░░░░░░░░░░░░░░░░░░░░  
 - VPC networking for Lambda functions
 
 #### **Frontend & Deployment** (Tasks 21-22)
-- React application with TypeScript
-- Authentication components
-- WebSocket connection manager
-- Chat interface with streaming
-- Document management UI
-- S3 + CloudFront deployment
+- ✅ React application with TypeScript (Task 21 completed)
+- ⏳ S3 + CloudFront deployment (Task 22 planned)
 
 #### **Integration & Testing** (Tasks 24-25)
 - End-to-end integration tests
@@ -410,7 +463,7 @@ Integration       ░░░░░░░░░░░░░░░░░░░░  
 - Performance benchmarks
 - Deployment documentation and runbooks
 
-**Progress: 18 of 26 tasks completed (69%)**
+**Progress: 19 of 26 tasks completed (73%)**
 
 See [tasks.md](.kiro/specs/aws-claude-rag-chatbot/tasks.md) for the complete implementation plan with detailed subtasks.
 
@@ -464,11 +517,29 @@ See [tasks.md](.kiro/specs/aws-claude-rag-chatbot/tasks.md) for the complete imp
    terraform apply  # Redeploy with updated function code
    ```
 
+6. **Build and run frontend locally**
+   ```bash
+   cd ../frontend
+   npm install
+   npm run dev  # Starts development server on http://localhost:5173
+   ```
+
+7. **Configure frontend environment**
+   ```bash
+   # Create .env file with API endpoints from Terraform outputs
+   VITE_REST_API_URL=<rest_api_url>
+   VITE_WEBSOCKET_URL=<websocket_url>
+   ```
+
 ### Testing
 
 Run tests for individual components:
 
 ```bash
+# Frontend tests
+cd frontend
+npm test
+
 # Authentication tests
 cd lambda/auth/login
 npm test
