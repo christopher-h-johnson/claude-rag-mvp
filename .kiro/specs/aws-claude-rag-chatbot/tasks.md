@@ -506,15 +506,15 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: 11.1_
 
 
-- [ ] 20. Implement Lambda concurrency and scaling configuration
-  - [ ] 20.1 Configure Lambda concurrency limits
+- [x] 20. Implement Lambda concurrency and scaling configuration
+  - [x] 20.1 Configure Lambda concurrency limits
     - Set reserved concurrency for WebSocket handler to support 100 concurrent connections
     - Set provisioned concurrency for latency-sensitive functions
     - Configure memory allocation: 1024MB for light functions, 3008MB for document processing
     - Set timeout: 30s for API handlers, 300s for document processing
     - _Requirements: 9.1, 13.2_
   
-  - [ ] 20.2 Configure Lambda VPC networking
+  - [x] 20.2 Configure Lambda VPC networking
     - Attach Lambda functions to VPC private subnets for OpenSearch access
     - Configure security groups for Lambda → OpenSearch communication
     - Ensure NAT Gateway for outbound Bedrock API calls

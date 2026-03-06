@@ -535,12 +535,13 @@ async function processChatMessage(
                     if (chunk.text) {
                         fullResponse += chunk.text;
 
-                        // Send chunk to client
+                        // Send accumulated content to client (not just the delta)
+                        // This allows the frontend to simply replace the content each time
                         await messageSender.sendMessage(
                             connectionId,
                             MessageSender.createChatResponse(
                                 messageId,
-                                chunk.text,
+                                fullResponse,  // Send full accumulated content
                                 false
                             )
                         );
@@ -552,9 +553,13 @@ async function processChatMessage(
                         // Send final message with full accumulated content and retrievedChunks metadata
                         const retrievedChunksMetadata = retrievedChunks.length > 0
                             ? retrievedChunks.map(chunk => ({
+                                chunkId: chunk.chunkId,
+                                documentId: chunk.documentId,
                                 documentName: chunk.documentName,
                                 pageNumber: chunk.pageNumber,
-                                text: chunk.text.substring(0, 200), // Truncate for metadata
+                                text: chunk.text.substring(0, 500), // Truncate for metadata but keep more context
+                                score: chunk.score,
+                                metadata: chunk.metadata,
                             }))
                             : undefined;
 

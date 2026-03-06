@@ -92,8 +92,8 @@ resource "aws_lambda_function" "authorizer" {
   role             = aws_iam_role.authorizer_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 256
+  timeout          = 30
+  memory_size      = 1024
 
   environment {
     variables = {
@@ -187,8 +187,8 @@ resource "aws_lambda_function" "login" {
   role             = aws_iam_role.login_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 512
+  timeout          = 30
+  memory_size      = 1024
 
   environment {
     variables = {
@@ -280,8 +280,8 @@ resource "aws_lambda_function" "logout" {
   role             = aws_iam_role.logout_role.arn
   handler          = "index.handler"
   runtime          = local.lambda_runtime
-  timeout          = local.lambda_timeout
-  memory_size      = 256
+  timeout          = 30
+  memory_size      = 1024
 
   environment {
     variables = {

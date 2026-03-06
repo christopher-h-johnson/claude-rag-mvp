@@ -30,7 +30,7 @@ interface ChatProps {
     websocketUrl: string;
 }
 
-const Chat: React.FC<ChatProps> = ({ token, userId, sessionId, websocketUrl }) => {
+const Chat: React.FC<ChatProps> = ({ token, userId: _userId, sessionId, websocketUrl }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [streamingContent, setStreamingContent] = useState('');

@@ -153,6 +153,7 @@ export const handler = async (
 
 /**
  * Get session from DynamoDB
+ * Uses consistent read to avoid eventual consistency issues after login
  */
 async function getSession(sessionId: string): Promise<SessionRecord | null> {
     try {
@@ -163,6 +164,9 @@ async function getSession(sessionId: string): Promise<SessionRecord | null> {
                     PK: `SESSION#${sessionId}`,
                     SK: `SESSION#${sessionId}`,
                 },
+                // Use consistent read to ensure we get the latest data
+                // This is critical for WebSocket connections immediately after login
+                ConsistentRead: true,
             })
         );
 

@@ -2,19 +2,23 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    width: 100%;
     min-height: 0;
-    /* Important for flex children */
     overflow: hidden;
     background-color: #f5f5f5;
 }
 
 .messages-container {
-    flex: 1 1 auto;
-    /* Allow to grow and shrink */
-    min-height: 0;
-    /* Important for overflow to work */
+    flex: 1 1 0;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #e0e0e0;
+    position: relative;
+}
+
+.messages-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -22,20 +26,22 @@
 
 /* Scrollbar styling */
 .messages-container::-webkit-scrollbar {
-    width: 8px;
+    width: 12px;
 }
 
 .messages-container::-webkit-scrollbar-track {
-    background: transparent;
+    background: #e0e0e0;
+    border-radius: 6px;
 }
 
 .messages-container::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
+    background: #888;
+    border-radius: 6px;
+    border: 2px solid #e0e0e0;
 }
 
 .messages-container::-webkit-scrollbar-thumb:hover {
-    background: #999;
+    background: #555;
 }
 
 /* Streaming message animation */
@@ -57,8 +63,8 @@
 }
 
 .message.streaming .message-content {
-    line-height: 1.6;
-    white-space: pre-wrap;
+    /* line-height: 1.6;
+    white-space: pre-wrap; */
     /* Allow line breaks and wrapping */
     word-wrap: break-word;
     overflow-wrap: break-word;

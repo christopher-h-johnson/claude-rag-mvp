@@ -125,6 +125,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 token,
                 loading: false,
             });
+
+            // Small delay to ensure DynamoDB session is fully propagated
+            // This prevents WebSocket 403 errors due to eventual consistency
+            await new Promise(resolve => setTimeout(resolve, 100));
         } catch (error) {
             console.error('Login failed:', error);
             throw error;

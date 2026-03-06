@@ -4,21 +4,14 @@
     height: 100%;
     width: 100%;
     position: relative;
+    min-height: 0;
+}
+
+.chat-container>.chat-window,
+.chat-window-flex {
+    flex: 1 1 0;
+    min-height: 0;
     overflow: hidden;
-    min-height: 0;
-    /* Important for flex children */
-}
-
-.chat-container>* {
-    flex-shrink: 0;
-    /* Prevent error messages from shrinking */
-}
-
-.chat-container>.chat-window {
-    flex: 1;
-    /* Allow chat window to grow */
-    min-height: 0;
-    /* Important for nested flex */
 }
 
 .connection-status {
@@ -43,14 +36,4 @@
     to {
         transform: translateY(0);
     }
-}
-
-
-.chat-window-flex {
-    flex: 1 1 auto;
-    /* Allow chat window to grow and shrink */
-    min-height: 0;
-    /* Important for nested flex */
-    overflow: hidden;
-    /* Ensure scrolling works within */
 }

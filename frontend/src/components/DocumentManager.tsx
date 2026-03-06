@@ -17,7 +17,7 @@ export default function DocumentManager() {
         message: string;
     } | null>(null);
 
-    const handleUploadComplete = (documentId: string) => {
+    const handleUploadComplete = (_documentId: string) => {
         setNotification({
             type: 'success',
             message: 'Document uploaded successfully! Processing will begin shortly.',
@@ -38,7 +38,7 @@ export default function DocumentManager() {
         setTimeout(() => setNotification(null), 5000);
     };
 
-    const handleDeleteSuccess = (documentId: string) => {
+    const handleDeleteSuccess = (_documentId: string) => {
         setNotification({
             type: 'success',
             message: 'Document deleted successfully',

@@ -37,9 +37,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         }
     }, [streamingContent]);
 
-    // Auto-scroll to bottom when new messages arrive
+    // Auto-scroll to bottom when new messages arrive (only if user is near bottom)
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        const container = containerRef.current;
+        if (!container) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+
+        if (isNearBottom) {
+            // Use instant scroll to avoid blocking user interaction
+            messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+        }
     }, [messages, streamingContent, isTyping]);
 
     const renderStreamingCitations = (chunks: DocumentChunk[]) => {
@@ -73,33 +82,35 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     };
 
     return (
-        <div className={`chat-window ${className}`} ref={containerRef}>
-            <div className="messages-container">
-                {messages.map((message) => (
-                    <Message key={message.messageId} message={message} />
-                ))}
+        <div className={`chat-window ${className}`}>
+            <div className="messages-container" ref={containerRef}>
+                <div className="messages-list">
+                    {messages.map((message) => (
+                        <Message key={message.messageId} message={message} />
+                    ))}
 
-                {/* Show streaming content as it arrives */}
-                {streamingContent && (
-                    <div className="message assistant streaming">
-                        <div className="message-content">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {streamingContent}
-                            </ReactMarkdown>
-                        </div>
-                        {/* Show RAG chunks with streaming content */}
-                        {streamingRAGChunks && streamingRAGChunks.length > 0 && (
-                            <div className="message-footer">
-                                {renderStreamingCitations(streamingRAGChunks)}
+                    {/* Show streaming content as it arrives */}
+                    {streamingContent && (
+                        <div className="message assistant streaming">
+                            <div className="message-content">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {streamingContent}
+                                </ReactMarkdown>
                             </div>
-                        )}
-                    </div>
-                )}
+                            {/* Show RAG chunks with streaming content */}
+                            {streamingRAGChunks && streamingRAGChunks.length > 0 && (
+                                <div className="message-footer">
+                                    {renderStreamingCitations(streamingRAGChunks)}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                {/* Show typing indicator while waiting for response */}
-                {isTyping && !streamingContent && <TypingIndicator />}
+                    {/* Show typing indicator while waiting for response */}
+                    {isTyping && !streamingContent && <TypingIndicator />}
 
-                <div ref={messagesEndRef} />
+                    <div ref={messagesEndRef} />
+                </div>
             </div>
         </div>
     );

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { Document, DocumentListResponse, DeleteDocumentResponse } from '../types';
+import type { Document, DocumentListResponse } from '../types';
 import API_CONFIG from '../config/api';
 import { getToken } from '../utils/auth';
 import ErrorMessage from './ErrorMessage';
@@ -102,7 +102,7 @@ export default function DocumentList({
                 throw new Error(errorData.message || 'Failed to delete document');
             }
 
-            const data: DeleteDocumentResponse = await response.json();
+            await response.json();
 
             // Remove document from list
             setDocuments(prev => prev.filter(doc => doc.documentId !== documentId));
