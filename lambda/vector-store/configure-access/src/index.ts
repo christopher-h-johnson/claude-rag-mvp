@@ -1,4 +1,6 @@
 import { Client } from '@opensearch-project/opensearch';
+import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
 
 /**
  * Lambda function to configure OpenSearch role mapping for IAM roles.
@@ -7,6 +9,7 @@ import { Client } from '@opensearch-project/opensearch';
  * IAM-authenticated requests to access OpenSearch when fine-grained
  * access control is enabled.
  * 
+ * This version uses IAM authentication (AWS Signature V4) instead of basic auth.
  * This must be run from within the VPC where OpenSearch is deployed.
  */
 
@@ -16,18 +19,18 @@ interface RoleMappingRequest {
 }
 
 /**
- * Creates an OpenSearch client with master user authentication
+ * Creates an OpenSearch client with IAM authentication
  */
-function createOpenSearchClient(endpoint: string, masterUser: string, masterPassword: string): Client {
+function createOpenSearchClient(endpoint: string): Client {
+    const region = process.env.AWS_REGION || 'us-east-1';
+
     return new Client({
-        node: `https://${endpoint}`,
-        auth: {
-            username: masterUser,
-            password: masterPassword
-        },
-        ssl: {
-            rejectUnauthorized: true
-        }
+        ...AwsSigv4Signer({
+            region,
+            service: 'es',
+            getCredentials: defaultProvider()
+        }),
+        node: `https://${endpoint}`
     });
 }
 
@@ -106,8 +109,6 @@ export async function handler(event: RoleMappingRequest): Promise<any> {
     console.log('Event:', JSON.stringify(event, null, 2));
 
     const endpoint = process.env.OPENSEARCH_ENDPOINT;
-    const masterUser = process.env.OPENSEARCH_MASTER_USER;
-    const masterPassword = process.env.OPENSEARCH_MASTER_PASSWORD;
 
     // Validate environment variables
     if (!endpoint) {
@@ -115,15 +116,6 @@ export async function handler(event: RoleMappingRequest): Promise<any> {
             statusCode: 500,
             body: JSON.stringify({
                 error: 'OPENSEARCH_ENDPOINT environment variable not set'
-            })
-        };
-    }
-
-    if (!masterUser || !masterPassword) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                error: 'OPENSEARCH_MASTER_USER and OPENSEARCH_MASTER_PASSWORD environment variables must be set'
             })
         };
     }
@@ -139,7 +131,7 @@ export async function handler(event: RoleMappingRequest): Promise<any> {
     }
 
     try {
-        const client = createOpenSearchClient(endpoint, masterUser, masterPassword);
+        const client = createOpenSearchClient(endpoint);
         const result = await mapRoleToOpenSearch(
             client,
             event.lambdaRoleArn,

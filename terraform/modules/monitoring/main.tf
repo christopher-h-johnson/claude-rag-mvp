@@ -157,3 +157,357 @@ resource "aws_cloudwatch_metric_alarm" "high_latency" {
     Environment = var.environment
   }
 }
+
+# CloudWatch Dashboard - System Monitoring
+# Validates: Requirements 15.4
+resource "aws_cloudwatch_dashboard" "system_monitoring" {
+  dashboard_name = "${var.environment}-chatbot-system-monitoring"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      # Request Rate
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["AWS/ApiGateway", "Count", { stat = "Sum", label = "REST API Requests" }],
+            ["AWS/ApiGateway", "Count", { stat = "Sum", label = "WebSocket Messages" }]
+          ]
+          period = 300
+          stat   = "Sum"
+          region = var.aws_region
+          title  = "Request Rate"
+          yAxis = {
+            left = {
+              label = "Requests"
+            }
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 0
+      },
+
+      # Error Rate
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["AWS/ApiGateway", "5XXError", { stat = "Sum", label = "5XX Errors", color = "#d62728" }],
+            ["AWS/ApiGateway", "4XXError", { stat = "Sum", label = "4XX Errors", color = "#ff7f0e" }],
+            ["AWS/Lambda", "Errors", { stat = "Sum", label = "Lambda Errors", color = "#e377c2" }]
+          ]
+          period = 300
+          stat   = "Sum"
+          region = var.aws_region
+          title  = "Error Rate"
+          yAxis = {
+            left = {
+              label = "Errors"
+            }
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 12
+        y      = 0
+      },
+
+      # Latency Percentiles (p50, p95, p99)
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["AWS/Lambda", "Duration", { stat = "p50", label = "p50 Latency" }],
+            ["AWS/Lambda", "Duration", { stat = "p95", label = "p95 Latency" }],
+            ["AWS/Lambda", "Duration", { stat = "p99", label = "p99 Latency" }]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "Response Latency Percentiles"
+          yAxis = {
+            left = {
+              label = "Milliseconds"
+            }
+          }
+          annotations = {
+            horizontal = [
+              {
+                label = "2s SLA Threshold"
+                value = 2000
+                color = "#d62728"
+              }
+            ]
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 6
+      },
+
+      # Bedrock Token Usage
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["ChatbotMetrics", "BedrockInputTokens", { stat = "Sum", label = "Input Tokens" }],
+            ["ChatbotMetrics", "BedrockOutputTokens", { stat = "Sum", label = "Output Tokens" }]
+          ]
+          period = 300
+          stat   = "Sum"
+          region = var.aws_region
+          title  = "Bedrock Token Usage"
+          yAxis = {
+            left = {
+              label = "Tokens"
+            }
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 12
+        y      = 6
+      },
+
+      # Bedrock Cost Estimates
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            [
+              {
+                expression = "(m1 * 0.00025 + m2 * 0.00125) / 1000"
+                label      = "Estimated Cost (USD)"
+                id         = "e1"
+              }
+            ],
+            ["ChatbotMetrics", "BedrockInputTokens", { id = "m1", visible = false }],
+            ["ChatbotMetrics", "BedrockOutputTokens", { id = "m2", visible = false }]
+          ]
+          period = 3600
+          region = var.aws_region
+          title  = "Bedrock Cost Estimates (Hourly)"
+          yAxis = {
+            left = {
+              label = "USD"
+            }
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 12
+      },
+
+      # Cache Hit Rate
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            [
+              {
+                expression = "(m1 / (m1 + m2)) * 100"
+                label      = "Cache Hit Rate (%)"
+                id         = "e1"
+              }
+            ],
+            ["ChatbotMetrics", "CacheHits", { id = "m1", visible = false }],
+            ["ChatbotMetrics", "CacheMisses", { id = "m2", visible = false }]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "Cache Hit Rate"
+          yAxis = {
+            left = {
+              label = "Percentage"
+              min   = 0
+              max   = 100
+            }
+          }
+          annotations = {
+            horizontal = [
+              {
+                label = "30% Target"
+                value = 30
+                color = "#2ca02c"
+              }
+            ]
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 12
+        y      = 12
+      },
+
+      # Concurrent User Count
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["ChatbotMetrics", "ConcurrentConnections", { stat = "Average", label = "Active WebSocket Connections" }],
+            ["AWS/Lambda", "ConcurrentExecutions", { stat = "Maximum", label = "Lambda Concurrent Executions" }]
+          ]
+          period = 60
+          region = var.aws_region
+          title  = "Concurrent User Count"
+          yAxis = {
+            left = {
+              label = "Count"
+            }
+          }
+          annotations = {
+            horizontal = [
+              {
+                label = "100 User Target"
+                value = 100
+                color = "#2ca02c"
+              }
+            ]
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 18
+      },
+
+      # OpenSearch Query Latency
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["ChatbotMetrics", "OpenSearchQueryLatency", { stat = "Average", label = "Average Latency" }],
+            ["ChatbotMetrics", "OpenSearchQueryLatency", { stat = "p95", label = "p95 Latency" }],
+            ["ChatbotMetrics", "OpenSearchQueryLatency", { stat = "p99", label = "p99 Latency" }]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "OpenSearch Query Latency"
+          yAxis = {
+            left = {
+              label = "Milliseconds"
+            }
+          }
+          annotations = {
+            horizontal = [
+              {
+                label = "200ms Target"
+                value = 200
+                color = "#d62728"
+              }
+            ]
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 12
+        y      = 18
+      },
+
+      # Lambda Invocations by Function
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["AWS/Lambda", "Invocations", { stat = "Sum", label = "WebSocket Message Handler" }],
+            ["AWS/Lambda", "Invocations", { stat = "Sum", label = "Document Processor" }],
+            ["AWS/Lambda", "Invocations", { stat = "Sum", label = "Auth Functions" }]
+          ]
+          period = 300
+          stat   = "Sum"
+          region = var.aws_region
+          title  = "Lambda Invocations by Function"
+          yAxis = {
+            left = {
+              label = "Invocations"
+            }
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 24
+      },
+
+      # DynamoDB Operations
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", { stat = "Sum", label = "Read Capacity" }],
+            ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", { stat = "Sum", label = "Write Capacity" }]
+          ]
+          period = 300
+          stat   = "Sum"
+          region = var.aws_region
+          title  = "DynamoDB Capacity Usage"
+          yAxis = {
+            left = {
+              label = "Units"
+            }
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 12
+        y      = 24
+      },
+
+      # S3 Storage Metrics
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["AWS/S3", "BucketSizeBytes", { stat = "Average", label = "Storage Used" }],
+            ["AWS/S3", "NumberOfObjects", { stat = "Average", label = "Object Count" }]
+          ]
+          period = 86400
+          region = var.aws_region
+          title  = "S3 Document Storage"
+          yAxis = {
+            left = {
+              label = "Bytes / Count"
+            }
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 0
+        y      = 30
+      },
+
+      # ElastiCache Redis Metrics
+      {
+        type = "metric"
+        properties = {
+          metrics = [
+            ["AWS/ElastiCache", "CacheHits", { stat = "Sum", label = "Cache Hits" }],
+            ["AWS/ElastiCache", "CacheMisses", { stat = "Sum", label = "Cache Misses" }],
+            ["AWS/ElastiCache", "CPUUtilization", { stat = "Average", label = "CPU Utilization (%)" }]
+          ]
+          period = 300
+          region = var.aws_region
+          title  = "ElastiCache Redis Performance"
+          yAxis = {
+            left = {
+              label = "Count / Percentage"
+            }
+          }
+        }
+        width  = 12
+        height = 6
+        x      = 12
+        y      = 30
+      }
+    ]
+  })
+
+  depends_on = [
+    aws_cloudwatch_log_group.audit_user_actions,
+    aws_cloudwatch_log_group.audit_api_calls,
+    aws_cloudwatch_log_group.audit_document_operations
+  ]
+}

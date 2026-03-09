@@ -5,8 +5,8 @@
     "type": "module",
     "main": "index.mjs",
     "scripts": {
-        "build": "tsc",
-        "build:lambda": "node build.mjs",
+        "build": "node build.mjs",
+        "compile": "tsc",
         "test": "vitest run",
         "test:watch": "vitest"
     },

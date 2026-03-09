@@ -4,7 +4,7 @@
  * Coordinates embedding generation, caching, and vector search
  * to retrieve relevant document chunks for user queries.
  * 
- * Requirements: 7.1, 7.2, 12.2
+ * Requirements: 7.1, 7.2, 12.2, 15.1
  */
 
 // @ts-ignore - Using built dist files from sibling modules
@@ -21,6 +21,7 @@ export class RAGSystem {
     private vectorStore: OpenSearchVectorStore;
     private cache: CacheLayer | null = null;
     private cacheEnabled: boolean;
+    private metricsCallback?: (latency: number, resultCount: number, scores?: { avg?: number; max?: number; min?: number }) => Promise<void>;
 
     constructor(config: RAGConfig) {
         // Initialize embedding generator
@@ -28,11 +29,15 @@ export class RAGSystem {
             region: config.region,
         });
 
-        // Initialize vector store
+        // Store metrics callback if provided
+        this.metricsCallback = config.metricsCallback;
+
+        // Initialize vector store with metrics callback
         this.vectorStore = new OpenSearchVectorStore(
             config.opensearchEndpoint,
             'documents',
-            config.region
+            config.region,
+            this.metricsCallback
         );
 
         // Initialize cache if configuration provided

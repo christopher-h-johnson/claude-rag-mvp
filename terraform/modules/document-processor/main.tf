@@ -304,6 +304,19 @@ resource "aws_iam_role_policy" "generate_embeddings" {
           "ec2:DeleteNetworkInterface"
         ]
         Resource = "*"
+      },
+      # CloudWatch Metrics permissions
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutMetricData"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "cloudwatch:namespace" = "ChatbotMetrics"
+          }
+        }
       }
     ]
   })

@@ -85,6 +85,14 @@ module "opensearch" {
   instance_type        = var.opensearch_instance_type
   instance_count       = var.opensearch_instance_count
   master_user_password = var.opensearch_master_user_password
+  master_user_arn      = module.opensearch_access_config.configure_access_role_arn
+  lambda_role_arns = [
+    module.websocket_handlers.message_role_arn,
+    module.document_processor.generate_embeddings_role_arn,
+    module.vector_store_init.lambda_role_arn,
+    module.document_management.delete_role_arn,
+    module.opensearch_access_config.configure_access_role_arn
+  ]
 }
 
 module "security" {
@@ -100,6 +108,7 @@ module "monitoring" {
 
   environment             = var.environment
   system_alerts_topic_arn = module.notifications.system_alerts_topic_arn
+  aws_region              = var.aws_region
 }
 
 module "notifications" {

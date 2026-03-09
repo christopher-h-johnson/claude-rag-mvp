@@ -49,3 +49,10 @@ variable "lambda_role_arns" {
   type        = list(string)
   default     = []
 }
+
+variable "master_user_arn" {
+  description = "Master user IAM ARN for OpenSearch (alternative to username/password)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

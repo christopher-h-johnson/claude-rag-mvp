@@ -50,11 +50,13 @@ resource "aws_opensearch_domain" "main" {
 
   advanced_security_options {
     enabled                        = true
-    internal_user_database_enabled = true
+    internal_user_database_enabled = false
     master_user_options {
-      master_user_name     = var.master_user_name
-      master_user_password = var.master_user_password
+      master_user_arn = var.master_user_arn != "" ? var.master_user_arn : null
     }
+    # Note: When using IAM for Lambda access, the roles must be mapped in OpenSearch
+    # The access policy above grants IAM permissions, but fine-grained access control
+    # requires additional role mapping which must be done via the OpenSearch API
   }
 
   access_policies = jsonencode({

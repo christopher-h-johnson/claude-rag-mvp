@@ -321,6 +321,18 @@ resource "aws_iam_role_policy" "message_policy" {
           "ec2:UnassignPrivateIpAddresses"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutMetricData"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "cloudwatch:namespace" = "ChatbotMetrics"
+          }
+        }
       }
     ]
   })

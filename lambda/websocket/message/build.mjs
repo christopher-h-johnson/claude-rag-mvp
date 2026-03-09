@@ -15,15 +15,24 @@ const __dirname = dirname(__filename);
 
 console.log('Building WebSocket Message Handler Lambda...\n');
 
-// Step 1: Install dependencies
-console.log('📦 Installing dependencies...');
+// Step 1: Clean dist folder
+console.log('🧹 Cleaning dist folder...');
+const distPath = join(__dirname, 'dist');
+if (existsSync(distPath)) {
+    rmSync(distPath, { recursive: true, force: true });
+}
+mkdirSync(distPath, { recursive: true });
+console.log('✅ Cleaned dist folder');
+
+// Step 2: Install dependencies
+console.log('\n📦 Installing dependencies...');
 execSync('npm install', { stdio: 'inherit', cwd: __dirname });
 
-// Step 2: Build TypeScript
+// Step 3: Build TypeScript
 console.log('\n🔨 Compiling TypeScript...');
 execSync('npm run compile', { stdio: 'inherit', cwd: __dirname });
 
-// Step 3: Rename index.js to index.mjs for explicit ES module
+// Step 4: Rename index.js to index.mjs for explicit ES module
 console.log('\n📝 Renaming index.js to index.mjs...');
 const indexJsPath = join(__dirname, 'dist', 'websocket', 'message', 'src', 'index.js');
 const indexMjsPath = join(__dirname, 'dist', 'index.mjs');
@@ -31,12 +40,19 @@ const indexMjsPath = join(__dirname, 'dist', 'index.mjs');
 if (existsSync(indexJsPath)) {
     renameSync(indexJsPath, indexMjsPath);
     console.log('✅ Renamed index.js → index.mjs');
+
+    // Clean up the websocket folder structure
+    const websocketDir = join(__dirname, 'dist', 'websocket');
+    if (existsSync(websocketDir)) {
+        rmSync(websocketDir, { recursive: true, force: true });
+        console.log('✅ Cleaned up websocket folder structure');
+    }
 } else {
     console.error('❌ index.js not found at expected location');
     process.exit(1);
 }
 
-// Step 4: Copy node_modules to dist
+// Step 5: Copy node_modules to dist
 console.log('\n📋 Copying node_modules to dist...');
 const nodeModulesSource = join(__dirname, 'node_modules');
 const nodeModulesDest = join(__dirname, 'dist', 'node_modules');
@@ -47,7 +63,7 @@ if (existsSync(nodeModulesDest)) {
 
 cpSync(nodeModulesSource, nodeModulesDest, { recursive: true });
 
-// Step 5: Copy shared modules
+// Step 6: Copy shared modules
 console.log('\n📋 Copying shared modules...');
 
 const sharedModules = [
@@ -58,7 +74,8 @@ const sharedModules = [
     'rag',
     'cache',
     'bedrock',
-    'circuit-breaker'
+    'circuit-breaker',
+    'metrics'
 ];
 
 for (const moduleName of sharedModules) {
@@ -80,7 +97,7 @@ for (const moduleName of sharedModules) {
     }
 }
 
-// Step 6: Copy WebSocket shared module
+// Step 7: Copy WebSocket shared module
 console.log('\n📋 Copying WebSocket shared module...');
 const wsSharedSource = join(__dirname, '..', 'shared', 'dist');
 const wsSharedDest = join(__dirname, 'dist', 'websocket-shared');
@@ -99,7 +116,7 @@ if (existsSync(wsSharedSource)) {
     console.warn('⚠️  Warning: websocket/shared/dist not found, skipping...');
 }
 
-// Step 7: Fix import paths in index.mjs
+// Step 8: Fix import paths in index.mjs
 console.log('\n🔧 Fixing import paths in index.mjs...');
 let indexContent = readFileSync(indexMjsPath, 'utf-8');
 
@@ -159,9 +176,14 @@ indexContent = indexContent.replace(
     "from './websocket-shared/types.mjs'"
 );
 
+indexContent = indexContent.replace(
+    /from ['"]\.\.\/\.\.\/\.\.\/shared\/metrics\/dist\/index\.mjs['"]/g,
+    "from './shared/metrics/index.mjs'"
+);
+
 writeFileSync(indexMjsPath, indexContent, 'utf-8');
 
-// Step 8: Create package.json in dist folder to mark as ES module
+// Step 9: Create package.json in dist folder to mark as ES module
 console.log('\n📝 Creating package.json in dist folder...');
 const distPackageJson = {
     type: 'module'

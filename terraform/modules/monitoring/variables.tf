@@ -8,3 +8,9 @@ variable "system_alerts_topic_arn" {
   type        = string
   default     = ""
 }
+
+variable "aws_region" {
+  description = "AWS region for CloudWatch metrics"
+  type        = string
+  default     = "us-east-2"
+}

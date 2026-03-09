@@ -39,7 +39,7 @@ if (existsSync(distDir)) {
 // Step 3: Copy sibling dependencies into dist
 console.log('\n📋 Copying sibling dependencies...');
 
-const siblingModules = ['embeddings', 'vector-store', 'cache'];
+const siblingModules = ['embeddings', 'vector-store', 'cache', 'metrics'];
 
 for (const moduleName of siblingModules) {
     const moduleSource = join(__dirname, '..', moduleName, 'dist');
@@ -113,6 +113,10 @@ if (existsSync(distDir)) {
                 /from ['"]\.\.\/\.\.\/cache\/dist\/(.+?)\.js['"]/g,
                 "from './cache/$1.mjs'"
             );
+            content = content.replace(
+                /from ['"]\.\.\/\.\.\/metrics\/dist\/(.+?)\.mjs['"]/g,
+                "from './metrics/$1.mjs'"
+            );
 
             if (content !== originalContent) {
                 writeFileSync(filePath, content, 'utf-8');
@@ -124,4 +128,4 @@ if (existsSync(distDir)) {
 
 console.log('\n✅ Build complete!');
 console.log('📁 Output: dist/*.mjs');
-console.log('📦 Sibling dependencies: dist/{embeddings,vector-store,cache}/\n');
+console.log('📦 Sibling dependencies: dist/{embeddings,vector-store,cache,metrics}/\n');

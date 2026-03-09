@@ -17,6 +17,7 @@ import { VectorStore, Embedding, SearchFilters, SearchResult, DocumentChunk } fr
 export class OpenSearchVectorStore implements VectorStore {
     private client: Client;
     private indexName: string;
+    private metricsCallback?: (latency: number, resultCount: number, scores?: { avg?: number; max?: number; min?: number }) => Promise<void>;
 
     /**
      * Creates an OpenSearch Vector Store client
@@ -24,9 +25,16 @@ export class OpenSearchVectorStore implements VectorStore {
      * @param endpoint - OpenSearch domain endpoint (without https://)
      * @param indexName - Name of the index to use (default: 'documents')
      * @param region - AWS region (default: from AWS_REGION env var or 'us-east-1')
+     * @param metricsCallback - Optional callback for emitting metrics
      */
-    constructor(endpoint: string, indexName: string = 'documents', region?: string) {
+    constructor(
+        endpoint: string,
+        indexName: string = 'documents',
+        region?: string,
+        metricsCallback?: (latency: number, resultCount: number, scores?: { avg?: number; max?: number; min?: number }) => Promise<void>
+    ) {
         this.indexName = indexName;
+        this.metricsCallback = metricsCallback;
         const awsRegion = region || process.env.AWS_REGION || 'us-east-1';
 
         this.client = new Client({
@@ -130,18 +138,22 @@ export class OpenSearchVectorStore implements VectorStore {
      * nearest neighbor search. Supports optional filtering by document IDs,
      * date range, and custom metadata.
      * 
+     * Emits search latency metrics to CloudWatch for monitoring performance.
+     * 
      * @param queryVector - Query embedding vector (1024 dimensions)
      * @param k - Number of results to return
      * @param filters - Optional filters for search refinement
      * @returns Array of search results with scores and document chunks
      * 
-     * Requirements: 7.2
+     * Requirements: 7.2, 15.1
      */
     async searchSimilar(
         queryVector: number[],
         k: number,
         filters?: SearchFilters
     ): Promise<SearchResult[]> {
+        const startTime = Date.now();
+
         try {
             // Validate query vector dimensions
             if (queryVector.length !== 1024) {
@@ -210,7 +222,7 @@ export class OpenSearchVectorStore implements VectorStore {
 
             // Parse and return results
             const hits = response.body.hits.hits;
-            return hits.map((hit: any) => {
+            const results = hits.map((hit: any) => {
                 const source = hit._source;
                 return {
                     chunkId: source.chunkId,
@@ -230,6 +242,33 @@ export class OpenSearchVectorStore implements VectorStore {
                     }
                 };
             });
+
+            // Calculate search latency
+            const latency = Date.now() - startTime;
+
+            // Calculate score statistics
+            const scores = results.map((r: SearchResult) => r.score);
+            const averageScore = scores.length > 0
+                ? scores.reduce((sum: number, score: number) => sum + score, 0) / scores.length
+                : undefined;
+            const maxScore = scores.length > 0 ? Math.max(...scores) : undefined;
+            const minScore = scores.length > 0 ? Math.min(...scores) : undefined;
+
+            // Emit search latency metric (Requirement 15.1)
+            if (this.metricsCallback) {
+                try {
+                    await this.metricsCallback(latency, results.length, {
+                        avg: averageScore,
+                        max: maxScore,
+                        min: minScore,
+                    });
+                } catch (metricsError) {
+                    // Log but don't fail the search if metrics emission fails
+                    console.error('Failed to emit search latency metric:', metricsError);
+                }
+            }
+
+            return results;
         } catch (error) {
             console.error('Error searching similar vectors:', error);
             throw new Error(`Failed to search similar vectors: ${error}`);

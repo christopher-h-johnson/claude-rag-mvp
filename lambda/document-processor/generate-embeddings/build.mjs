@@ -21,10 +21,10 @@ execSync('npm install', { stdio: 'inherit', cwd: __dirname });
 
 // Step 2: Build TypeScript
 console.log('\n🔨 Compiling TypeScript...');
-execSync('npm run build', { stdio: 'inherit', cwd: __dirname });
+execSync('npm run compile', { stdio: 'inherit', cwd: __dirname });
 
 // Step 3: Rename index.js to index.mjs for explicit ES module
-console.log('\n� Renaming index.js to index.mjs...');
+console.log('\n📝 Renaming index.js to index.mjs...');
 const indexJsPath = join(__dirname, 'dist', 'index.js');
 const indexMjsPath = join(__dirname, 'dist', 'index.mjs');
 
@@ -68,7 +68,7 @@ if (!existsSync(embeddingsPackageJson)) {
 }
 
 // Step 6: Copy shared vector-store module
-console.log('\n� Copying shared vector-store module...');
+console.log('\n📋 Copying shared vector-store module...');
 const vectorStoreSource = join(__dirname, '..', '..', '..', 'lambda', 'shared', 'vector-store', 'dist');
 const vectorStoreDest = join(__dirname, 'dist', 'shared', 'vector-store');
 
@@ -81,7 +81,21 @@ if (!existsSync(vectorStorePackageJson)) {
     writeFileSync(vectorStorePackageJson, JSON.stringify({ type: 'module' }, null, 2), 'utf-8');
 }
 
-// Step 7: Fix import paths in index.mjs
+// Step 7: Copy shared metrics module
+console.log('\n📋 Copying shared metrics module...');
+const metricsSource = join(__dirname, '..', '..', '..', 'lambda', 'shared', 'metrics', 'dist');
+const metricsDest = join(__dirname, 'dist', 'shared', 'metrics');
+
+mkdirSync(metricsDest, { recursive: true });
+cpSync(metricsSource, metricsDest, { recursive: true });
+
+// Ensure package.json exists for ES module support
+const metricsPackageJson = join(metricsDest, 'package.json');
+if (!existsSync(metricsPackageJson)) {
+    writeFileSync(metricsPackageJson, JSON.stringify({ type: 'module' }, null, 2), 'utf-8');
+}
+
+// Step 8: Fix import paths in index.mjs
 console.log('\n🔧 Fixing import paths in index.mjs...');
 let indexContent = readFileSync(indexMjsPath, 'utf-8');
 
@@ -101,10 +115,22 @@ indexContent = indexContent.replace(
     "from './shared/vector-store/types.mjs'"
 );
 
+indexContent = indexContent.replace(
+    /from ['"]\.\.\/\.\.\/\.\.\/shared\/metrics\/dist\/index\.mjs['"]/g,
+    "from './shared/metrics/index.mjs'"
+);
+
 writeFileSync(indexMjsPath, indexContent, 'utf-8');
+
+// Step 9: Create package.json in dist folder to mark as ES module
+console.log('\n📝 Creating package.json in dist folder...');
+const distPackageJson = {
+    type: 'module'
+};
+writeFileSync(join(__dirname, 'dist', 'package.json'), JSON.stringify(distPackageJson, null, 2), 'utf-8');
+console.log('✅ Created dist/package.json');
 
 console.log('\n✅ Build complete!');
 console.log('📁 Output: dist/index.mjs');
 console.log('📦 Dependencies: dist/node_modules/');
 console.log('🔗 Shared modules: dist/shared/');
-

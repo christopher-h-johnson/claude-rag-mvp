@@ -27,3 +27,8 @@ output "message_function_name" {
   description = "Name of the WebSocket message handler Lambda"
   value       = aws_lambda_function.message.function_name
 }
+
+output "message_role_arn" {
+  description = "ARN of the WebSocket message handler IAM role"
+  value       = aws_iam_role.message_role.arn
+}
