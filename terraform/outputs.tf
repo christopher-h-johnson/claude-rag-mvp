@@ -178,3 +178,14 @@ output "operational_notifications_topic_name" {
   description = "Name of the operational notifications SNS topic"
   value       = module.notifications.operational_notifications_topic_name
 }
+
+# Monitoring outputs
+output "cloudwatch_dashboard_name" {
+  description = "CloudWatch dashboard name"
+  value       = module.monitoring.dashboard_name
+}
+
+output "cloudwatch_dashboard_arn" {
+  description = "CloudWatch dashboard ARN"
+  value       = module.monitoring.dashboard_arn
+}

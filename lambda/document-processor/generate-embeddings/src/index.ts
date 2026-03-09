@@ -13,10 +13,11 @@
 
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
-import { Handler } from 'aws-lambda';
+import { Handler, Context } from 'aws-lambda';
 import { EmbeddingGenerator } from '../../../shared/embeddings/dist/index.js';
 import { OpenSearchVectorStore } from '../../../shared/vector-store/dist/index.js';
 import { Embedding } from '../../../shared/vector-store/dist/types.js';
+import { emitExecutionDuration, emitEmbeddingGenerationTime, flushMetrics } from '../../../shared/metrics/dist/index.mjs';
 
 const s3Client = new S3Client({});
 const dynamoDBClient = new DynamoDBClient({});
@@ -35,7 +36,22 @@ if (!DOCUMENT_METADATA_TABLE) {
     throw new Error('DOCUMENT_METADATA_TABLE environment variable is required');
 }
 
-const vectorStore = new OpenSearchVectorStore(OPENSEARCH_ENDPOINT, OPENSEARCH_INDEX);
+const vectorStore = new OpenSearchVectorStore(
+    OPENSEARCH_ENDPOINT,
+    OPENSEARCH_INDEX,
+    undefined, // region - use default
+    async (latency, resultCount, scores) => {
+        // Metrics callback for OpenSearch operations
+        try {
+            await emitExecutionDuration({
+                functionName: 'opensearch-query',
+                duration: latency,
+            });
+        } catch (error) {
+            console.error('Failed to emit OpenSearch metrics:', error);
+        }
+    }
+);
 
 interface TextChunk {
     chunkId: string;
@@ -80,8 +96,11 @@ interface GenerateEmbeddingsResponse {
 
 /**
  * Lambda handler for generating embeddings
+ * 
+ * Validates Requirements: 5.5, 6.1, 6.3, 6.4, 15.1
  */
-export const handler: Handler<GenerateEmbeddingsEvent, GenerateEmbeddingsResponse> = async (event, context) => {
+export const handler: Handler<GenerateEmbeddingsEvent, GenerateEmbeddingsResponse> = async (event, context: Context) => {
+    const startTime = Date.now();
     console.log('Generate Embeddings Lambda triggered', {
         requestId: context.awsRequestId,
         documentId: event.documentId,
@@ -97,8 +116,22 @@ export const handler: Handler<GenerateEmbeddingsEvent, GenerateEmbeddingsRespons
 
         // 2. Generate embeddings for all chunks
         console.log('Generating embeddings...');
+        const embeddingStartTime = Date.now();
         const embeddingsWithMetadata = await generateEmbeddingsForChunks(chunks);
-        console.log(`Generated ${embeddingsWithMetadata.length} embeddings`);
+        const embeddingDuration = Date.now() - embeddingStartTime;
+        console.log(`Generated ${embeddingsWithMetadata.length} embeddings in ${embeddingDuration}ms`);
+
+        // Emit embedding generation time metric (Requirement 15.1)
+        try {
+            await emitEmbeddingGenerationTime({
+                generationTime: embeddingDuration,
+                chunkCount: chunks.length,
+                documentId,
+            });
+        } catch (error) {
+            console.error('Error emitting embedding generation time metric:', error);
+            // Non-critical, continue
+        }
 
         // 3. Transform to OpenSearch Embedding format
         const embeddings: Embedding[] = embeddingsWithMetadata.map(e => ({
@@ -125,6 +158,20 @@ export const handler: Handler<GenerateEmbeddingsEvent, GenerateEmbeddingsRespons
         await updateDocumentMetadata(documentId, chunks.length);
         console.log('Successfully updated DocumentMetadata table');
 
+        // Emit execution duration metric (Requirement 15.1)
+        try {
+            await emitExecutionDuration({
+                functionName: 'generate-embeddings',
+                duration: Date.now() - startTime,
+            });
+        } catch (error) {
+            console.error('Error emitting execution duration metric:', error);
+            // Non-critical, continue
+        }
+
+        // Flush metrics before returning
+        await flushMetrics();
+
         // 6. Return success response
         return {
             statusCode: 200,
@@ -143,6 +190,17 @@ export const handler: Handler<GenerateEmbeddingsEvent, GenerateEmbeddingsRespons
             await updateDocumentMetadata(event.documentId, 0, 'failed', String(error));
         } catch (updateError) {
             console.error('Error updating DocumentMetadata with failure:', updateError);
+        }
+
+        // Emit execution duration metric even on error
+        try {
+            await emitExecutionDuration({
+                functionName: 'generate-embeddings',
+                duration: Date.now() - startTime,
+            });
+            await flushMetrics();
+        } catch (metricsError) {
+            console.error('Error emitting metrics on error:', metricsError);
         }
 
         throw error;

@@ -11,6 +11,7 @@ import { RAGSystem } from '../../../shared/rag/src/rag.js';
 import { CacheLayer } from '../../../shared/cache/src/cache.js';
 import { BedrockService } from '../../../shared/bedrock/src/bedrock.js';
 import { CircuitBreaker, CircuitBreakerError } from '../../../shared/circuit-breaker/src/circuit-breaker.js';
+import { emitExecutionDuration, emitQueryLatency, emitTokenUsage, flushMetrics } from '../../../shared/metrics/dist/index.mjs';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -77,10 +78,12 @@ interface ConnectionRecord {
  * Implements requirements:
  * - 10.1: Rate limiting check (60 requests per minute per user)
  * - 11.1: Audit logging for user actions
+ * - 15.1: Emit execution duration metrics
  */
 export const handler = async (
     event: APIGatewayProxyWebsocketEventV2
 ): Promise<APIGatewayProxyResultV2> => {
+    const startTime = Date.now();
     console.log('WebSocket message event:', JSON.stringify(event, null, 2));
 
     const connectionId = event.requestContext.connectionId;
@@ -90,6 +93,8 @@ export const handler = async (
     // Create MessageSender instance
     const apiEndpoint = `https://${domainName}/${stage}`;
     const messageSender = new MessageSender(apiEndpoint, CONNECTIONS_TABLE);
+
+    let userId: string | undefined;
 
     try {
         // Parse the incoming message
@@ -105,6 +110,13 @@ export const handler = async (
                     false
                 )
             );
+
+            // Emit execution duration metric
+            await emitExecutionDuration({
+                functionName: 'websocket-message-handler',
+                duration: Date.now() - startTime,
+            });
+            await flushMetrics();
 
             return {
                 statusCode: 400,
@@ -122,6 +134,13 @@ export const handler = async (
                     false
                 )
             );
+
+            // Emit execution duration metric
+            await emitExecutionDuration({
+                functionName: 'websocket-message-handler',
+                duration: Date.now() - startTime,
+            });
+            await flushMetrics();
 
             return {
                 statusCode: 400,
@@ -142,11 +161,20 @@ export const handler = async (
                 )
             );
 
+            // Emit execution duration metric
+            await emitExecutionDuration({
+                functionName: 'websocket-message-handler',
+                duration: Date.now() - startTime,
+            });
+            await flushMetrics();
+
             return {
                 statusCode: 401,
                 body: JSON.stringify({ message: 'Unauthorized' })
             };
         }
+
+        userId = userContext.userId;
 
         // Apply rate limiting check
         const rateLimitResult = await rateLimiter.checkRateLimit(userContext);
@@ -162,6 +190,14 @@ export const handler = async (
                     true
                 )
             );
+
+            // Emit execution duration metric
+            await emitExecutionDuration({
+                functionName: 'websocket-message-handler',
+                duration: Date.now() - startTime,
+                userId: userContext.userId,
+            });
+            await flushMetrics();
 
             return {
                 statusCode: 429,
@@ -203,6 +239,23 @@ export const handler = async (
             messageSender
         );
 
+        // Emit execution duration metric (Requirement 15.1)
+        await emitExecutionDuration({
+            functionName: 'websocket-message-handler',
+            duration: Date.now() - startTime,
+            userId: userContext.userId,
+        });
+
+        // Emit query latency metric (Requirement 15.1)
+        await emitQueryLatency({
+            latency: processingResult.latency,
+            userId: userContext.userId,
+            cached: processingResult.cached,
+        });
+
+        // Flush metrics before returning
+        await flushMetrics();
+
         return {
             statusCode: 200,
             body: JSON.stringify({
@@ -228,6 +281,14 @@ export const handler = async (
         } catch (sendError) {
             console.error('Failed to send error message to client:', sendError);
         }
+
+        // Emit execution duration metric even on error
+        await emitExecutionDuration({
+            functionName: 'websocket-message-handler',
+            duration: Date.now() - startTime,
+            userId,
+        });
+        await flushMetrics();
 
         return {
             statusCode: 500,
@@ -302,6 +363,17 @@ function initializeServices(): void {
             // region is auto-detected from Lambda environment
             cacheHost: CACHE_HOST,
             cachePort: CACHE_PORT,
+            metricsCallback: async (latency, resultCount, scores) => {
+                // Emit search latency metrics
+                try {
+                    await emitQueryLatency({
+                        latency,
+                        cached: false,
+                    });
+                } catch (error) {
+                    console.error('Failed to emit search latency metrics:', error);
+                }
+            },
         });
     }
 
@@ -350,7 +422,9 @@ async function processChatMessage(
     userId: string,
     connectionId: string,
     messageSender: MessageSender
-): Promise<{ cached: boolean }> {
+): Promise<{ cached: boolean; latency: number }> {
+    const processingStartTime = Date.now();
+
     // Wrap entire pipeline in try-catch (Requirement 14.1)
     try {
         // Initialize services if not already done
@@ -404,7 +478,8 @@ async function processChatMessage(
                         )
                     );
 
-                    return { cached: true };
+                    const latency = Date.now() - processingStartTime;
+                    return { cached: true, latency };
                 }
 
                 console.log('Cache miss');
@@ -601,6 +676,22 @@ async function processChatMessage(
                 // Non-critical, continue
             }
 
+            // Emit Bedrock token usage metrics (Requirement 15.3)
+            try {
+                // Note: Bedrock doesn't provide separate input/output token counts in streaming mode
+                // We'll emit the total as output tokens for now
+                await emitTokenUsage({
+                    inputTokens: 0, // Not available in streaming response
+                    outputTokens: tokenCount,
+                    userId,
+                    model: 'claude-haiku-4.5',
+                });
+                console.log('Token usage metrics emitted');
+            } catch (error) {
+                console.error('Error emitting token usage metrics:', error);
+                // Non-critical, continue
+            }
+
             // Task 17.4: Cache complete response with 1-hour TTL
             if (cacheLayer && fullResponse) {
                 try {
@@ -653,7 +744,8 @@ async function processChatMessage(
                 }
             }
 
-            return { cached: false };
+            const latency = Date.now() - processingStartTime;
+            return { cached: false, latency };
 
         } catch (error) {
             console.error('Error during streaming response:', error);

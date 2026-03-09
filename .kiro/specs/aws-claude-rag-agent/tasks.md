@@ -188,7 +188,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: 6.1, 6.5_
 
 
-- [ ] 9. Implement Vector Store with OpenSearch
+- [x] 9. Implement Vector Store with OpenSearch
   - [x] 9.1 Create OpenSearch index with k-NN configuration
     - Define index mapping with knn_vector field (1024 dimensions, cosinesimil)
     - Configure HNSW parameters: ef_construction=512, m=16, ef_search=512
@@ -408,7 +408,7 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
     - _Requirements: Integration of tasks 1-15_
 
 
-- [ ] 17. Implement main chat handler Lambda
+- [x] 17. Implement main chat handler Lambda
   - [x] 17.1 Create WebSocket chat message handler
     - Handle chat_message action from WebSocket
     - Extract userId from connection context
@@ -455,18 +455,18 @@ The architecture is serverless-first using AWS Lambda, API Gateway, S3, OpenSear
 
 
 - [ ] 18. Implement performance monitoring and metrics
-  - [ ] 18.1 Add CloudWatch metrics emission to Lambda functions
+  - [x] 18.1 Add CloudWatch metrics emission to Lambda functions
     - Emit execution duration for every Lambda invocation
     - Emit custom metrics: query_latency, embedding_generation_time, search_latency
     - Emit Bedrock token usage metrics (input_tokens, output_tokens)
     - _Requirements: 15.1, 15.3_
   
-  - [ ] 18.2 Add OpenSearch query metrics
+  - [x] 18.2 Add OpenSearch query metrics
     - Emit search latency for every k-NN query
     - Track search result count and scores
     - _Requirements: 15.2_
   
-  - [ ] 18.3 Create CloudWatch dashboard
+  - [x] 18.3 Create CloudWatch dashboard
     - Display key metrics: request rate, error rate, latency percentiles (p50, p95, p99)
     - Display Bedrock token usage and cost estimates
     - Display cache hit rate

@@ -704,9 +704,9 @@ This project follows a spec-driven development approach:
 
 ## Documentation
 
-- [Requirements Document](.kiro/specs/aws-claude-rag-chatbot/requirements.md) - Functional requirements
-- [Design Document](.kiro/specs/aws-claude-rag-chatbot/design.md) - Architecture and design decisions
-- [Implementation Tasks](.kiro/specs/aws-claude-rag-chatbot/tasks.md) - Development roadmap
+- [Requirements Document](.kiro/specs/aws-claude-rag-agent/requirements.md) - Functional requirements
+- [Design Document](.kiro/specs/aws-claude-rag-agent/design.md) - Architecture and design decisions
+- [Implementation Tasks](.kiro/specs/aws-claude-rag-agent/tasks.md) - Development roadmap
 - [Terraform Deployment](terraform/DEPLOYMENT.md) - Infrastructure deployment guide
 - [Lambda Build Guide](lambda/auth/BUILD.md) - Lambda function build instructions
 

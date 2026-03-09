@@ -25,6 +25,7 @@ export interface RAGConfig {
     cachePort?: number;
     cachePassword?: string;
     cacheTls?: boolean;
+    metricsCallback?: (latency: number, resultCount: number, scores?: { avg?: number; max?: number; min?: number }) => Promise<void>;
 }
 
 /**

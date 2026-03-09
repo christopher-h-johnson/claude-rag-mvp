@@ -42,3 +42,8 @@ output "delete_invoke_arn" {
   description = "Invoke ARN of the Delete Lambda function"
   value       = aws_lambda_function.delete.invoke_arn
 }
+
+output "delete_role_arn" {
+  description = "ARN of the Delete Lambda IAM role"
+  value       = aws_iam_role.delete_role.arn
+}
