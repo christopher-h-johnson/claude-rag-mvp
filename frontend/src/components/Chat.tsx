@@ -4,6 +4,7 @@ import { WebSocketManager } from '../utils/websocket';
 import type { WebSocketConnectionState } from '../utils/websocket';
 import { parseError } from '../utils/errorHandler';
 import { useChatContext } from '../contexts/ChatContext';
+import { useAuth } from '../contexts/AuthContext';
 import type {
     ChatMessage,
     DocumentChunk,
@@ -29,6 +30,7 @@ interface ChatProps {
 const Chat: React.FC<ChatProps> = ({ token, userId: _userId, sessionId, websocketUrl }) => {
     // Use chat context for persistent state
     const { chatState, updateMessages } = useChatContext();
+    const { logout } = useAuth();
 
     const [messageRAGChunks, setMessageRAGChunks] = useState<Record<string, DocumentChunk[]>>({});
     const [isTyping, setIsTyping] = useState(false);
@@ -104,6 +106,15 @@ const Chat: React.FC<ChatProps> = ({ token, userId: _userId, sessionId, websocke
                             retryable: true
                         });
                     }
+                },
+                onAuthFailure: () => {
+                    console.error('WebSocket authentication failed - session expired');
+                    setError({
+                        message: 'Your session has expired. Please log in again.',
+                        retryable: false
+                    });
+                    // Trigger logout to clear expired session
+                    logout();
                 }
             });
 
@@ -119,6 +130,14 @@ const Chat: React.FC<ChatProps> = ({ token, userId: _userId, sessionId, websocke
             }
         };
     }, [websocketUrl, token]);
+
+    // Update WebSocket token when it changes (e.g., after session timeout/re-login)
+    useEffect(() => {
+        if (wsManager && token) {
+            console.log('Token changed, updating WebSocket manager');
+            wsManager.updateToken(token);
+        }
+    }, [token, wsManager]);
 
     // Handle incoming WebSocket messages
     const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
