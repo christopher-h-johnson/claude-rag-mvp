@@ -45,24 +45,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             if (lastMessage.role === 'user') {
                 lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } else {
-                // For assistant messages, check if user is near bottom before scrolling
-                const { scrollTop, scrollHeight, clientHeight } = container;
-                const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-
-                if (isNearBottom) {
-                    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }
-            }
-        } else if (isTyping) {
-            // When typing indicator appears, ensure it's visible
-            const { scrollTop, scrollHeight, clientHeight } = container;
-            const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-
-            if (isNearBottom) {
+                // For new assistant messages, scroll to bottom smoothly
                 messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }
         }
-    }, [messages, isTyping]);
+    }, [messages.length]); // Only trigger on message count change, not content updates
+
+    // Continuously scroll during streaming to keep new content visible
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        // When typing indicator is active or messages are streaming, keep scrolling to bottom
+        // Use direct scrollTop for smooth continuous scrolling during streaming
+        if (isTyping || (messages.length > 0 && messages[messages.length - 1]?.isStreaming)) {
+            // Use requestAnimationFrame for smooth scrolling
+            requestAnimationFrame(() => {
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+    }, [isTyping, messages]);
 
     return (
         <div className={`chat-window ${className}`}>
