@@ -14,6 +14,7 @@ export interface WebSocketManagerOptions {
     onMessage: (message: WebSocketMessage) => void;
     onStateChange: (state: WebSocketConnectionState) => void;
     onReconnectAttempt?: (attempt: number, maxAttempts: number, delay: number) => void;
+    onAuthFailure?: () => void; // Called when authentication fails (session expired)
     maxReconnectAttempts?: number;
     reconnectDelays?: number[]; // Exponential backoff delays in ms
 }
@@ -25,12 +26,14 @@ export class WebSocketManager {
     private onMessage: (message: WebSocketMessage) => void;
     private onStateChange: (state: WebSocketConnectionState) => void;
     private onReconnectAttempt?: (attempt: number, maxAttempts: number, delay: number) => void;
+    private onAuthFailure?: () => void;
     private reconnectAttempts = 0;
     private maxReconnectAttempts: number;
     private reconnectDelays: number[];
     private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     private keepAliveInterval: ReturnType<typeof setInterval> | null = null;
     private intentionallyClosed = false;
+    private authFailureDetected = false;
 
     constructor(options: WebSocketManagerOptions) {
         this.url = options.url;
@@ -38,6 +41,7 @@ export class WebSocketManager {
         this.onMessage = options.onMessage;
         this.onStateChange = options.onStateChange;
         this.onReconnectAttempt = options.onReconnectAttempt;
+        this.onAuthFailure = options.onAuthFailure;
         this.maxReconnectAttempts = options.maxReconnectAttempts ?? 10;
         this.reconnectDelays = options.reconnectDelays ?? [1000, 2000, 4000, 8000, 16000];
     }
@@ -117,6 +121,8 @@ export class WebSocketManager {
 
         console.log('Token updated, reconnecting WebSocket...');
         this.token = newToken;
+        this.authFailureDetected = false; // Reset auth failure flag
+        this.reconnectAttempts = 0; // Reset reconnect attempts
 
         // Disconnect and reconnect with new token
         if (this.ws) {
@@ -194,14 +200,36 @@ export class WebSocketManager {
             console.error('WebSocket closed abnormally (1006) - likely authentication failure (403)');
             console.error('Check: 1) Token is valid, 2) Token not expired, 3) Session exists in DynamoDB');
             console.error('This can happen immediately after login due to timing - retry should succeed');
+
+            // If we've tried multiple times and keep getting 1006, it's likely a session expiration
+            if (this.reconnectAttempts >= 3 && !this.authFailureDetected) {
+                console.error('Multiple authentication failures detected - session likely expired');
+                this.authFailureDetected = true;
+                if (this.onAuthFailure) {
+                    this.onAuthFailure();
+                }
+            }
         } else if (event.code === 1008) {
             console.error('WebSocket policy violation (1008) - authorization denied');
+            // Immediate auth failure
+            if (!this.authFailureDetected) {
+                this.authFailureDetected = true;
+                if (this.onAuthFailure) {
+                    this.onAuthFailure();
+                }
+            }
         } else if (event.code === 1011) {
             console.error('WebSocket server error (1011)');
         }
 
         this.clearKeepAlive();
         this.onStateChange('disconnected');
+
+        // Don't attempt reconnection if auth failure was detected
+        if (this.authFailureDetected) {
+            console.log('Auth failure detected - stopping reconnection attempts');
+            return;
+        }
 
         // Attempt reconnection if not intentionally closed
         if (!this.intentionallyClosed && this.reconnectAttempts < this.maxReconnectAttempts) {
