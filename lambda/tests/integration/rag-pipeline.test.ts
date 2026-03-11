@@ -12,13 +12,18 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
+import { getTestConfig, displayTestConfig } from './load-terraform-config';
 
-// Mock test data representing the RAG pipeline stages
-const TEST_CONFIG = {
-    testTimeout: 60000,
-};
+// Load test configuration from Terraform outputs or environment variables
+const TEST_CONFIG = getTestConfig();
 
 describe('RAG Pipeline Integration Tests', () => {
+
+    beforeAll(() => {
+        // Display test configuration for debugging
+        displayTestConfig(TEST_CONFIG);
+    });
+
     describe('1. Document Processing Pipeline', () => {
         it('should simulate text extraction from PDF', async () => {
             // Simulate PDF text extraction

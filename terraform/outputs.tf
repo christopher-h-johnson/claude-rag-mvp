@@ -63,6 +63,11 @@ output "lambda_execution_role_arn" {
   value       = module.security.lambda_execution_role_arn
 }
 
+output "lambda_execution_role_name" {
+  description = "Lambda execution role name"
+  value       = module.security.lambda_execution_role_name
+}
+
 output "cloudwatch_log_group_names" {
   description = "CloudWatch log group names"
   value       = module.monitoring.log_group_names
@@ -71,6 +76,11 @@ output "cloudwatch_log_group_names" {
 output "websocket_api_endpoint" {
   description = "WebSocket API endpoint URL"
   value       = module.websocket.websocket_api_endpoint
+}
+
+output "websocket_api_id" {
+  description = "WebSocket API ID"
+  value       = module.websocket.websocket_api_id
 }
 
 output "websocket_stage_url" {
