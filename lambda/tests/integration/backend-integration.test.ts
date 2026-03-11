@@ -26,17 +26,10 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import * as crypto from 'crypto';
+import { getTestConfig, displayTestConfig } from './load-terraform-config';
 
 // Test configuration
-const TEST_CONFIG = {
-    region: process.env.AWS_REGION || 'us-east-1',
-    documentsBucket: process.env.DOCUMENTS_BUCKET || 'chatbot-documents-test',
-    sessionsTable: process.env.SESSIONS_TABLE || 'chatbot-sessions',
-    chatHistoryTable: process.env.CHAT_HISTORY_TABLE || 'chatbot-chat-history',
-    documentMetadataTable: process.env.DOCUMENT_METADATA_TABLE || 'chatbot-document-metadata',
-    vectorStoreEndpoint: process.env.OPENSEARCH_ENDPOINT || 'https://localhost:9200',
-    testTimeout: 60000, // 60 seconds for integration tests
-};
+const TEST_CONFIG = getTestConfig();
 
 // Initialize AWS clients
 const s3Client = new S3Client({ region: TEST_CONFIG.region });
@@ -48,6 +41,12 @@ const testSessionId = `test-session-${Date.now()}`;
 const testDocumentId = `test-doc-${Date.now()}`;
 
 describe('Backend Integration Tests', () => {
+
+    beforeAll(() => {
+        // Display test configuration for debugging
+        displayTestConfig(TEST_CONFIG);
+    });
+
     describe('1. Authentication and Session Management', () => {
         it('should create and validate a session token', async () => {
             // Create a test session
@@ -313,31 +312,34 @@ describe('Backend Integration Tests', () => {
     });
 
     describe('4. Service Integration Verification', () => {
-        it('should verify all required environment variables are set', () => {
-            const requiredEnvVars = [
-                'AWS_REGION',
-                'DOCUMENTS_BUCKET',
-                'SESSIONS_TABLE',
-                'CHAT_HISTORY_TABLE',
-                'DOCUMENT_METADATA_TABLE',
-                'OPENSEARCH_ENDPOINT',
+        it('should verify all required configuration is loaded', () => {
+            // Verify TEST_CONFIG has all required values
+            const requiredConfig = [
+                { key: 'region', value: TEST_CONFIG.region },
+                { key: 'documentsBucket', value: TEST_CONFIG.documentsBucket },
+                { key: 'sessionsTable', value: TEST_CONFIG.sessionsTable },
+                { key: 'chatHistoryTable', value: TEST_CONFIG.chatHistoryTable },
+                { key: 'documentMetadataTable', value: TEST_CONFIG.documentMetadataTable },
+                { key: 'opensearchEndpoint', value: TEST_CONFIG.opensearchEndpoint },
             ];
 
-            // Check if running in CI/test environment
-            const isTestEnv = process.env.NODE_ENV === 'test' || process.env.CI === 'true';
+            requiredConfig.forEach(({ key, value }) => {
+                expect(
+                    value,
+                    `Configuration ${key} should be loaded`
+                ).toBeDefined();
+                expect(
+                    value,
+                    `Configuration ${key} should not be empty`
+                ).not.toBe('');
+            });
 
-            if (!isTestEnv) {
-                // In local development, we use defaults, so this test passes
-                expect(true).toBe(true);
-            } else {
-                // In CI/production, verify all env vars are set
-                requiredEnvVars.forEach((envVar) => {
-                    expect(
-                        process.env[envVar],
-                        `Environment variable ${envVar} should be set`
-                    ).toBeDefined();
-                });
-            }
+            // Verify configuration source (Terraform, env vars, or defaults)
+            console.log('Configuration loaded successfully from:',
+                process.env.DOCUMENTS_BUCKET ? 'environment variables' :
+                    TEST_CONFIG.documentsBucket.includes('test') ? 'defaults' :
+                        'Terraform outputs'
+            );
         });
 
         it('should verify DynamoDB tables are accessible', async () => {
